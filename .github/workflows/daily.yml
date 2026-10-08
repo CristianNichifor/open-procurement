@@ -166,7 +166,7 @@ jobs:
           set -euo pipefail
           # All four, not just the account id. Two of these are not secret at all -
           # the account id is visible in a dashboard URL and the bucket name is
-          # "achizitii-deschise" - so they get set first and alone, which is exactly
+          # "open-procurement" - so they get set first and alone, which is exactly
           # the state that made a one-variable check misreport: it announced "R2
           # configured", installed boto3, and then uploaded nothing, because
           # R2Config.from_env() quite correctly requires the whole set.
