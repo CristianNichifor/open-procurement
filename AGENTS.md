@@ -1,4 +1,4 @@
-# achizitii-deschise
+# Open Procurement
 
 Date deschise despre achizițiile publice din România — prețuri unitare comparabile, format OCDS. Open data on Romanian public procurement: comparable unit prices, OCDS format.
 
