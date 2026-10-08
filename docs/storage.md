@@ -16,7 +16,7 @@ and the table above reads as current state, so:
 
 | | State |
 |---|---|
-| Bucket `achizitii-deschise` | exists, **3 objects** |
+| Bucket `achizitii-deschise` (CN Webify Core) | exists, **3 objects**; copied to `open-procurement` in CN Webify Customers at the move, then deleted |
 | Custom domain on it | **none** |
 | CORS policy on it | **none** — the API answers `The CORS configuration does not exist` |
 | Line items published to R2 | **no** |
@@ -182,13 +182,15 @@ viable at all.
 
 ## Setting it up
 
-R2 must be enabled in the Cloudflare dashboard first — the API refuses with
-`Please enable R2 through the Cloudflare Dashboard` until it is.
+The bucket lives in the **CN Webify Customers** Cloudflare account
+(`5d5a0c8a05e5d8292065cd0c0cf60291`). R2 must be enabled in the dashboard first — the
+API refuses with `Please enable R2 through the Cloudflare Dashboard` until it is.
 
-1. Create a bucket, e.g. `achizitii-deschise`.
-2. Create an API token scoped to **Object Read & Write** on that bucket.
-3. Add four repository secrets: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
-   `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`.
+1. Create the bucket `open-procurement`.
+2. Create an API token scoped to **Object Read & Write** on that bucket only.
+3. Add four repository secrets: `R2_ACCOUNT_ID` (the Customers account ID),
+   `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (from that token) and
+   `R2_BUCKET=open-procurement`. Set them from 1Password, never pasted.
 4. Attach a **custom domain** to the bucket. Not `r2.dev` — Cloudflare documents it as
    rate-limited and non-production, and a custom domain also returns CORS headers
    automatically and puts Cloudflare Cache in front, so repeat reads stop counting as

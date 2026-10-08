@@ -40,7 +40,7 @@ Deschideți un *issue* pe GitHub folosind unul dintre formulare:
 | Sunteți autoritate/ofertant și contestați o interpretare | **Drept la replică** |
 | O problemă sistematică (o coloană, un an, un indicator) | **Problemă de calitate a datelor** |
 
-👉 https://github.com/CristianNichifor/achizitii-deschise/issues/new/choose
+👉 https://github.com/CristianNichifor/open-procurement/issues/new/choose
 
 Dacă nu doriți să folosiți GitHub, scrieți la adresa din profilul de contact al
 depozitului. Vom deschide noi *issue*-ul în numele dumneavoastră, păstrând conținutul
@@ -109,7 +109,7 @@ next to the record.
 Open a GitHub issue using one of the templates — data correction, right of reply, or
 data-quality problem:
 
-👉 https://github.com/CristianNichifor/achizitii-deschise/issues/new/choose
+👉 https://github.com/CristianNichifor/open-procurement/issues/new/choose
 
 If you would rather not use GitHub, write to the contact address on the repository
 profile and we will file it on your behalf, preserving your wording.

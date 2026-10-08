@@ -9,7 +9,7 @@ the derived benchmark aggregates — are licensed
 You may copy, redistribute, remix and build upon them, including commercially,
 provided you give appropriate credit:
 
-> Sursa: achizitii-deschise (github.com/CristianNichifor/achizitii-deschise),
+> Sursa: Open Procurement (github.com/CristianNichifor/open-procurement),
 > date primare din SEAP / e-licitatie.ro și data.gov.ro, Licența pentru Guvernare Deschisă v1.0.
 
 ## Upstream sources and their terms

@@ -90,7 +90,7 @@ def test_fork_bundle_fetch_uses_upstream_unless_explicitly_overridden(tmp_path):
     for key in ("GH_TOKEN", "GITHUB_TOKEN", "BUNDLE_REPOSITORY"):
         env.pop(key, None)
     for override, expected in (
-        (None, "CristianNichifor/achizitii-deschise"),
+        (None, "CristianNichifor/open-procurement"),
         ("example/datasets", "example/datasets"),
     ):
         if override:
