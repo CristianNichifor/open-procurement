@@ -1,4 +1,4 @@
-# achizitii-deschise
+# Open Procurement
 
 **Date deschise despre achizițiile publice din România — prețuri unitare comparabile, în format OCDS.**
 
@@ -6,7 +6,7 @@ Open data on Romanian public procurement. This project publishes the **unit pric
 individual line items** — what a single laptop, toner cartridge or hour of guard duty
 actually cost — so that prices paid by different public buyers can be compared.
 
-**👉 [cristiannichifor.github.io/achizitii-deschise](https://cristiannichifor.github.io/achizitii-deschise/)**
+**👉 [projects.cristian-nichifor.com/open-procurement](https://projects.cristian-nichifor.com/open-procurement/)**
 — 26,6 milioane de achiziții directe, interogabile direct în browser. Fără server:
 DuckDB-Wasm citește fișiere Parquet statice.
 

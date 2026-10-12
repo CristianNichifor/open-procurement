@@ -8,7 +8,7 @@ project may do: whether a bulk export carrying line items exists, whether an aut
 client can be whitelisted, and what rate is acceptable. Until that is answered, nothing
 here contacts SEAP unless a person starts it.
 
-The hold is narrow on purpose. `daily.yml` also mirrors the RUTI meetings register
+The hold is narrow on purpose. `publish-data.yml` also mirrors the RUTI meetings register
 (ruti.gov.ro, seven requests, a service that has never restricted us), rebuilds the
 published bundle and uploads to R2 — none of which touches SEAP. Removing the schedule
 outright would have stopped those as collateral and left the R2 upload path still never
@@ -45,8 +45,10 @@ def test_no_workflow_reaches_seap_without_someone_starting_it(flows: dict[str, s
             continue
         if "schedule:" not in text:
             continue  # dispatch-only, which is the shape backfill.yml and bulk.yml have
-        assert name == "daily.yml", f"{name} schedules SEAP traffic and is not accounted for"
-        # And daily.yml only does it when a person pressed the button.
+        assert name == "publish-data.yml", (
+            f"{name} schedules SEAP traffic and is not accounted for"
+        )
+        # And publish-data.yml only does it when a person pressed the button.
         assert "if: github.event_name == 'workflow_dispatch'" in text, (
             "the SEAP ingest must be gated on a manual run while the hold is in place"
         )
@@ -55,7 +57,7 @@ def test_no_workflow_reaches_seap_without_someone_starting_it(flows: dict[str, s
 def test_the_hold_is_written_down_where_the_trigger_is(flows: dict[str, str]) -> None:
     """A guard nobody can find the reason for gets removed by the next person who reads
     the file."""
-    daily = flows["daily.yml"]
+    daily = flows["publish-data.yml"]
     assert "HELD, 2026-09-08" in daily
     assert "ADR" in daily
     assert "To resume:" in daily, "and it has to say how to undo itself"
@@ -64,7 +66,7 @@ def test_the_hold_is_written_down_where_the_trigger_is(flows: dict[str, str]) ->
 def test_the_cost_of_waiting_is_stated(flows: dict[str, str]) -> None:
     """The hold trades a permanent loss for a temporary caution. That trade belongs next
     to the switch, not in a chat log."""
-    daily = flows["daily.yml"]
+    daily = flows["publish-data.yml"]
     assert "only ever grows forward" in daily
     assert "2026-09-05" in daily and "2026-09-07" in daily
 
@@ -72,7 +74,7 @@ def test_the_cost_of_waiting_is_stated(flows: dict[str, str]) -> None:
 def test_a_held_run_does_not_claim_to_have_collected(flows: dict[str, str]) -> None:
     """A scheduled run still commits the meetings register and a rebuilt bundle. Labelling
     that "archive unit prices" would put a claim in the history the run did not earn."""
-    daily = flows["daily.yml"]
+    daily = flows["publish-data.yml"]
     assert "refresh the meetings register and rebuild the bundle" in daily
     assert "No SEAP endpoint was contacted." in daily
 
@@ -80,7 +82,7 @@ def test_a_held_run_does_not_claim_to_have_collected(flows: dict[str, str]) -> N
 def test_the_things_that_do_not_touch_seap_keep_running(flows: dict[str, str]) -> None:
     """The point of holding the ingest rather than the workflow: RUTI stays current, the
     bundle stays rebuilt, and the R2 upload finally gets exercised on a runner."""
-    daily = flows["daily.yml"]
+    daily = flows["publish-data.yml"]
     for step in ("achizitii ruti", "achizitii publish --only preturi",
                  "achizitii publish --only preturi --r2"):
         assert step in daily, f"{step} must survive the hold"

@@ -20,7 +20,7 @@ API = f"{BASE}/api-pub"
 # That is the entire "session trap" — no cookies or JS execution are required.
 REFERER = f"{BASE}/pub"
 
-CONTACT = "https://github.com/CristianNichifor/achizitii-deschise"
+CONTACT = "https://github.com/CristianNichifor/open-procurement"
 USER_AGENT = f"achizitii-deschise/0.1 (+{CONTACT})"
 
 HEADERS = {

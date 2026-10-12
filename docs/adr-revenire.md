@@ -31,7 +31,7 @@ anything in return for it.
 >
 > Revin la mesajul trimis în 8 septembrie 2026 privind accesul la datele publice din SEAP
 > pentru proiectul open-source `achizitii-deschise`
-> (https://github.com/CristianNichifor/achizitii-deschise), care publică prețuri unitare
+> (https://github.com/CristianNichifor/open-procurement), care publică prețuri unitare
 > din achizițiile directe, sub licență deschisă.
 >
 > Între timp am suspendat complet colectarea automată, inclusiv rularea programată care
