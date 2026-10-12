@@ -3,7 +3,7 @@ name: tests
 # WHY THIS EXISTS
 #
 # It did not, and that had already cost something. Until now the only jobs that ran
-# `pytest` were `daily.yml` and `bulk.yml`, neither of which triggers on a pull request.
+# `pytest` were `publish-data.yml` and `bulk.yml`, neither of which triggers on a pull request.
 # The checks reported on every PR — "Analyze (actions)", "Analyze (python)", "CodeQL" —
 # are CodeQL only. A green PR meant the code had been scanned, not that it worked.
 #

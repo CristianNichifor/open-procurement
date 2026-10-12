@@ -216,7 +216,7 @@ jobs:
             git commit -m "data: refresh the meetings register and rebuild the bundle
 
           Scheduled run with the SEAP ingest held — see the note on the schedule
-          trigger in .github/workflows/daily.yml. No SEAP endpoint was contacted."
+          trigger in .github/workflows/publish-data.yml. No SEAP endpoint was contacted."
           fi
           # main may have moved while the ingest ran. Day files are append-only and
           # never touch anything another commit would, so a rebase cannot conflict on

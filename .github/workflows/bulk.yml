@@ -43,7 +43,7 @@ jobs:
 
       - run: pip install -e ".[dev]"
 
-      # Same reason as daily.yml: the bundle is a release asset and several tests read it
+      # Same reason as publish-data.yml: the bundle is a release asset and several tests read it
       # directly. This workflow is dispatch-only and last ran before the bundle moved, so it
       # has not failed yet — it would have, the next time someone reached for it.
       - name: Fetch the bundle

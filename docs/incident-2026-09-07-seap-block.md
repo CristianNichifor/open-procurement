@@ -140,7 +140,7 @@ limit; only local development is cut off." That was true when written and is no 
 Later on 2026-09-08 the decision was taken to **hold all automated collection**, including
 the scheduled job that was operating inside the published ceiling. Nothing now contacts
 SEAP unless a person starts it by hand. The switch and the reasoning live on the schedule
-trigger in `.github/workflows/daily.yml`, and `tests/test_seap_hold.py` guards it.
+trigger in `.github/workflows/publish-data.yml`, and `tests/test_seap_hold.py` guards it.
 
 The hold is narrower than it sounds: the same scheduled job still mirrors the RUTI
 meetings register, rebuilds the published bundle and uploads to R2, none of which touches
