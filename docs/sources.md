@@ -66,7 +66,7 @@ Historical archive 2007–2018 is served from `http://istoric.e-licitatie.ro` on
 >   where the host is reachable and publish the derived Parquet for CI to consume.
 >
 > The SEAP `api-pub` endpoints have no such restriction and work fine from Actions —
-> `daily.yml` runs there successfully.
+> `publish-data.yml` runs there successfully.
 
 Publisher: **Autoritatea pentru Digitalizarea României**. Licence: **OGL v1.0**.
 Dataset slugs `achizitii-publice-{YYYY}`, covering **2016 → 2026 T2**, quarterly.

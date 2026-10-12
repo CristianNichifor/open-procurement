@@ -187,15 +187,22 @@ The bucket lives in the **CN Webify Customers** Cloudflare account
 API refuses with `Please enable R2 through the Cloudflare Dashboard` until it is.
 
 1. Create the bucket `open-procurement`.
-2. Create an API token scoped to **Object Read & Write** on that bucket only.
-3. Add four repository secrets: `R2_ACCOUNT_ID` (the Customers account ID),
-   `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (from that token) and
-   `R2_BUCKET=open-procurement`. Set them from 1Password, never pasted.
+2. No repository secrets. `.github/workflows/publish-data.yml` asks the CN Webify token
+   broker (`https://tokens.cnwebify.com`) for a one-hour token, proving itself with the
+   job's GitHub OIDC token. The broker admits that exact file, on `main`, on `schedule`,
+   `push` and `workflow_dispatch`, and the token may only write objects in this bucket.
+   For R2's S3 API the access key ID is the token's `token_id` and the secret access key
+   is the SHA-256 hex of the token; the workflow derives and masks both.
+3. Remove the old `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and
+   `R2_BUCKET` repository secrets after the first green run of `publish-data.yml`.
 4. Attach a **custom domain** to the bucket. Not `r2.dev` — Cloudflare documents it as
    rate-limited and non-production, and a custom domain also returns CORS headers
    automatically and puts Cloudflare Cache in front, so repeat reads stop counting as
    Class B operations.
 5. Set the bucket CORS policy to allow the Pages origin.
 
-Without those secrets nothing breaks: `publish` writes locally and logs that R2 is not
-configured, so anyone can build the whole site from a clone.
+Without credentials nothing breaks: `publish` writes locally and logs that R2 is not
+configured, so anyone can build the whole site from a clone. A fork, or a run off `main`,
+gets no broker token, and the workflow says so and skips the upload. Locally, the
+`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_BUCKET` environment
+variables still drive `achizitii publish --r2`.

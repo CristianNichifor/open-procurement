@@ -42,8 +42,8 @@ def test_maps_the_documented_fields() -> None:
     # Naive on purpose, here and below: the mapped values are naive UTC by design, and an
     # aware expectation would not compare equal to one. DTZ001 is a good default rule and
     # a wrong one for exactly this assertion.
-    assert m.data_intalnirii == datetime(2026, 9, 9)  # noqa: DTZ001
-    assert m.data_publicarii == datetime(2026, 9, 5, 15, 13)  # noqa: DTZ001
+    assert m.data_intalnirii == datetime(2026, 9, 9)
+    assert m.data_publicarii == datetime(2026, 9, 5, 15, 13)
 
 
 def test_timestamps_are_naive_utc_so_the_output_is_machine_independent() -> None:
@@ -71,7 +71,7 @@ def test_offsets_are_converted_to_utc_not_discarded() -> None:
     it would silently shift this meeting three hours later.
     """
     m = to_meeting({**RECORD, "date_entered": "2026-09-05T18:13:00+03:00"})
-    assert m.data_publicarii == datetime(2026, 9, 5, 15, 13)  # noqa: DTZ001
+    assert m.data_publicarii == datetime(2026, 9, 5, 15, 13)
 
 
 def test_empty_strings_become_null_not_empty() -> None:
