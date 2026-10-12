@@ -26,6 +26,10 @@ on:
     # platform considers normal, once a day is what the previous months ran at without
     # complaint. Raise it only with evidence, not with a throughput measurement.
     - cron: "20 4 * * *"
+  # A merge to main rebuilds the bundle and refreshes R2 at once instead of at 04:20.
+  # Without the dispatch the ingest stays off, so the hold above still holds.
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       start:
@@ -46,6 +50,7 @@ concurrency:
 permissions:
   # write: the run commits the day's prices, which is the only durable copy.
   contents: write
+  id-token: write          # the broker reads this job's GitHub OIDC token
 
 jobs:
   ingest:
@@ -146,39 +151,52 @@ jobs:
       - name: Archive prices and rebuild the published bundle
         run: achizitii publish --only preturi
 
-      # Consolidates the daily archive into monthly Parquet and uploads it. A fork
-      # without the secrets must still work, so absent credentials are a skip, not a
-      # failure.
+      # R2 credentials are minted per run by the CN Webify token broker, which trusts this
+      # job's GitHub OIDC token: no Cloudflare secret lives in the repository. The broker
+      # admits this exact file, on main, on schedule/push/dispatch, and scopes the token to
+      # writing objects in the `open-procurement` bucket of the CN Webify Customers account.
       #
-      # The guard is inside the script on purpose. It used to be `if: env.R2_ACCOUNT_ID
-      # != ''`, which reads a variable defined in this step's OWN env: block, and whether
-      # that is in scope for its own if: is genuinely ambiguous. If it is not, the step
-      # is skipped forever — including after someone has set every secret correctly — and
-      # the symptom is silence. A shell test has no such ambiguity and says out loud which
-      # branch it took.
-      - name: Publish data to R2
-        env:
-          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      # It is fetched here, after the ingest, and not at the top of the job: the token lives
+      # one hour and the ingest alone may take most of the five-hour timeout.
+      #
+      # A fork, or a run off main, has no way to get a token, so both are a skip that says
+      # so, not a failure. The guard is a shell test inside the step on purpose: an `if:` on
+      # the step is silent when it skips, and silence is the symptom this step once had.
+      - name: Cloudflare token from the CN Webify broker
+        id: broker
         run: |
           set -euo pipefail
-          # All four, not just the account id. Two of these are not secret at all -
-          # the account id is visible in a dashboard URL and the bucket name is
-          # "open-procurement" - so they get set first and alone, which is exactly
-          # the state that made a one-variable check misreport: it announced "R2
-          # configured", installed boto3, and then uploaded nothing, because
-          # R2Config.from_env() quite correctly requires the whole set.
-          missing=""
-          for name in R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET; do
-            [ -z "${!name:-}" ] && missing="${missing} ${name}"
-          done
-          if [ -n "${missing}" ]; then
-            echo "::notice::R2 not configured (missing:${missing}); data stays on Pages only."
+          if [ "${GITHUB_REPOSITORY}" != "CristianNichifor/open-procurement" ] \
+            || [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "::notice::R2 skipped: the broker serves CristianNichifor/open-procurement on main only (this is ${GITHUB_REPOSITORY} on ${GITHUB_REF}); data stays on Pages only."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          echo "R2 configured for bucket '${R2_BUCKET}'; consolidating and uploading."
+          jwt=$(curl -sf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://tokens.cnwebify.com" | jq -r .value)
+          reply=$(curl -sf -X POST -H "Authorization: Bearer $jwt" https://tokens.cnwebify.com/token)
+          token=$(jq -r .token <<<"$reply"); echo "::add-mask::$token"
+          echo "CLOUDFLARE_API_TOKEN=$token" >> "$GITHUB_ENV"
+          echo "CLOUDFLARE_ACCOUNT_ID=5d5a0c8a05e5d8292065cd0c0cf60291" >> "$GITHUB_ENV"
+          # R2's S3 API takes the token's id as the access key and the SHA-256 of the token
+          # as the secret. Both are masked before they reach the environment.
+          key_id=$(jq -r .token_id <<<"$reply"); echo "::add-mask::$key_id"
+          secret=$(printf %s "$token" | sha256sum | cut -d' ' -f1); echo "::add-mask::$secret"
+          echo "R2_ACCESS_KEY_ID=$key_id" >> "$GITHUB_ENV"
+          echo "R2_SECRET_ACCESS_KEY=$secret" >> "$GITHUB_ENV"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      # Consolidates the daily archive into monthly Parquet and uploads it. The account and
+      # bucket are not secret — the account id is in every dashboard URL — so they are set
+      # here in the open; only the keys come from the broker step.
+      - name: Publish data to R2
+        if: steps.broker.outputs.ready == 'true'
+        env:
+          R2_ACCOUNT_ID: "5d5a0c8a05e5d8292065cd0c0cf60291"
+          R2_BUCKET: open-procurement
+        run: |
+          set -euo pipefail
+          echo "Uploading to bucket '${R2_BUCKET}' in CN Webify Customers."
           pip install -e ".[r2]"
           achizitii publish --only preturi --r2
 
@@ -215,7 +233,7 @@ jobs:
           else
             git commit -m "data: refresh the meetings register and rebuild the bundle
 
-          Scheduled run with the SEAP ingest held — see the note on the schedule
+          Run without the SEAP ingest, which is held — see the note on the schedule
           trigger in .github/workflows/publish-data.yml. No SEAP endpoint was contacted."
           fi
           # main may have moved while the ingest ran. Day files are append-only and
