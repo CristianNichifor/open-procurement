@@ -1,0 +1,101 @@
+name: deploy-pages-cloudflare
+
+# Publishes site/ to Cloudflare Pages (CN Webify Customers), laid out like GitHub Pages so the
+# projects hub proxies /open-procurement/ 1:1. main is public behind
+# projects.cristian-nichifor.com/open-procurement/; dev is the protected preview behind
+# projects-dev.cristian-nichifor.com, reached only through the CN Webify preview gate (ADR-022),
+# which functions/_middleware.js enforces on every preview deployment.
+#
+# No secrets: a one-hour Cloudflare token comes from the CN Webify token broker, which accepts this
+# exact file on main and dev. pages.yml keeps publishing to GitHub Pages until the hub switches.
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write          # the broker reads this job's GitHub OIDC token
+
+concurrency:
+  group: deploy-pages-cloudflare-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  PROJECT_NAME: open-procurement
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The bundle is a release asset, not in git (pages.yml explains why).
+      - name: Fetch the bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/fetch_bundle.sh
+
+      - name: Verify the bundle is present
+        run: |
+          if [ ! -f site/data/manifest.json ]; then
+            echo "::error::site/data/manifest.json is missing."
+            exit 1
+          fi
+          python3 - <<'PY'
+          import json, pathlib, sys
+          m = json.loads(pathlib.Path("site/data/manifest.json").read_text())
+          missing = [
+              d["file"] for d in m.get("datasets", []) + m.get("indicatori", [])
+              if not pathlib.Path("site/data", d["file"]).is_file()
+          ]
+          if missing:
+              sys.exit(f"::error::manifest lists files that are not present: {missing}")
+          # Cloudflare Pages refuses single files over 25 MiB; fail early with a clear reason.
+          big = [str(p) for p in pathlib.Path("site").rglob("*") if p.is_file() and p.stat().st_size > 25 * 1024 * 1024]
+          if big:
+              sys.exit(f"::error::files over the 25 MiB Pages limit: {big}")
+          PY
+
+      # Served under /open-procurement/, as on GitHub Pages; the root redirects there.
+      - name: Stage the site under its path
+        run: |
+          mkdir -p _site/open-procurement
+          cp -r site/. _site/open-procurement/
+          printf '/ /open-procurement/ 302\n' > _site/_redirects
+
+      - name: Cloudflare token from the CN Webify broker
+        run: |
+          set -euo pipefail
+          jwt=$(curl -sf -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://tokens.cnwebify.com" | jq -r .value)
+          reply=$(curl -sf -X POST -H "Authorization: Bearer $jwt" https://tokens.cnwebify.com/token)
+          token=$(jq -r .token <<<"$reply"); echo "::add-mask::$token"
+          echo "CLOUDFLARE_API_TOKEN=$token" >> "$GITHUB_ENV"
+          echo "CLOUDFLARE_ACCOUNT_ID=5d5a0c8a05e5d8292065cd0c0cf60291" >> "$GITHUB_ENV"
+
+      # Created once; Cloudflare may give the project a random pages.dev suffix.
+      - name: Create Pages project if missing
+        run: |
+          set -uo pipefail
+          if ! out=$(npx --yes wrangler@4.149.0 pages project create "$PROJECT_NAME" --production-branch main 2>&1); then
+            if grep -qi "already exists" <<<"$out"; then
+              echo "Pages project $PROJECT_NAME already exists"
+            else
+              echo "$out"
+              exit 1
+            fi
+          fi
+
+      # functions/ (the preview gate) is picked up from the repository root.
+      - name: Deploy to Cloudflare Pages
+        run: npx --yes wrangler@4.149.0 pages deploy _site --project-name="$PROJECT_NAME" --branch="$GITHUB_REF_NAME"
+
+      - name: Report pages.dev hostname
+        run: |
+          set -euo pipefail
+          subdomain=$(curl -sf -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PROJECT_NAME" \
+            | jq -r .result.subdomain)
+          echo "Pages project \`$PROJECT_NAME\` ($GITHUB_REF_NAME): https://$subdomain/open-procurement/" >> "$GITHUB_STEP_SUMMARY"
