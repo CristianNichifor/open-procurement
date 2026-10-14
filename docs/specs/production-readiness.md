@@ -229,6 +229,18 @@ Test: `tests/browser/mobile-prices.spec.js` at 390 px and 1440 px.
 
 Test: `tests/test_ux_guidelines.py`, `tests/test_site_links.py`.
 
+### OP-12 A retry on every failed query (done)
+
+- Given a view whose query fails (a dropped connection, a blocked file), then the status line
+  says „Eroare: …” followed by a „Reîncearcă” button; clicking it runs the same view again,
+  and on success the button is gone.
+- Given the engine fails to start, then the existing explanation is followed by a
+  „Reîncearcă” button that reloads the page.
+- Closes deviation D-4 in `docs/ux-guidelines.md`. „Reîncearcă” is agent-written: needs human
+  review.
+
+Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it again".
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.
