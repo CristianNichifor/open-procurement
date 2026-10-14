@@ -2160,8 +2160,8 @@ async function suggestOtherAspect() {
 // returning to the previous view. For a page whose stated purpose is letting other
 // people check the figures, an uncitable finding is barely published.
 //
-// The state lives in the HASH, not the query string. This is served as static files from
-// GitHub Pages: a path or a query the server has never heard of returns 404, while
+// The state lives in the HASH, not the query string. This is served as static files with
+// no router: a path or a query the server has never heard of is not this page, while
 // everything after "#" never leaves the browser. It also means an old link degrades to
 // the summary rather than to an error.
 const URL_KEYS = ['v', 's', 'q', 'an', 'minn', 'baza', 'sort', 'dir', 'pag', 'inst',

@@ -1,8 +1,8 @@
-"""Build the browser-queryable bundle served from GitHub Pages.
+"""Build the browser-queryable bundle served from Cloudflare Pages.
 
-The archive is 1.5 GB of Parquet, 95.6% of it direct acquisitions. GitHub Pages caps a
-site at 1 GB, so the raw rows cannot be published there — and should not be, because a
-browser has no use for 26.7 million rows it must download before answering anything.
+The archive is 1.5 GB of Parquet, 95.6% of it direct acquisitions. That is too much to
+serve as static files, so the raw rows are not published with the site — and should not be,
+because a browser has no use for 26.7 million rows it must download before answering anything.
 
 What a reader actually asks is aggregate: how much did this authority spend, who did it
 buy from, what does this CPV usually cost, which acquisitions cluster under the ceiling.

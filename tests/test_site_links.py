@@ -7,8 +7,8 @@ Back left the site instead of returning to the previous view. For a page whose s
 purpose is letting other people check the figures, an uncitable figure is barely
 published at all.
 
-State now lives in the hash. Not the query string: this is served as static files from
-GitHub Pages, where a path or query the server has never heard of returns 404, while
+State now lives in the hash. Not the query string: this is served as static files with
+no router, where a path or query the server has never heard of is not this page, while
 everything after "#" never reaches a server.
 
 Source assertions, like the other site tests. The behaviour was verified in a real
@@ -43,7 +43,7 @@ def _body(source: str, decl: str, chars: int = 2000) -> str:
 
 
 def test_state_is_carried_in_the_hash_not_the_path(source: str) -> None:
-    """GitHub Pages has no router. A path or query it does not recognise is a 404, so a
+    """Static hosting has no router. A path or query it does not recognise is a 404, so a
     shared link has to survive without the server understanding any of it."""
     assert "function applyHash(" in source
     assert "location.hash" in source
