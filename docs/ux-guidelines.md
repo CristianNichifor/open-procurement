@@ -69,8 +69,8 @@ Top to bottom, on every page of `site/`:
   anything over 2 s shows staged progress (download size in MB, then the engine). A query
   typed while the engine loads is queued, not lost (`ux.spec.js`).
 - Empty: say what was searched and suggest a wider filter; never an empty table.
-- Error: say what failed in plain Romanian and offer a retry. *The retry button is
-  missing — D-4.*
+- Error: say what failed in plain Romanian and offer „Reîncearcă”, which runs the same
+  view again (OP-12, `ux.spec.js`).
 - A tab change replaces the old table at once (`ux.spec.js`).
 - Demo or partial data is labelled where the figure appears, not only on the method page.
 
@@ -106,6 +106,7 @@ newest data is instead of claiming freshness.
 | Phone layout, no horizontal scroll | `tests/test_site_mobile.py`, `mobile-prices.spec.js`, `controls.spec.js` |
 | axe 0 serious, light and dark | `tests/browser/a11y.spec.js` |
 | RO/EN toggle sets the document language | `tests/browser/pages.spec.js` |
+| Failed query offers a retry | `tests/browser/ux.spec.js` |
 | Every view has a URL | `tests/test_site_links.py` |
 | No IP or personal data leaks | `tests/test_no_ip_leaks.py` |
 
@@ -121,7 +122,7 @@ From the live review (2026-10-14) and a code audit of `site/index.html`; screens
   naming decision from the owner.
 - **D-2** No status badge from the vocabulary in §7.
 - **D-3** Table date columns show ISO dates (`toISOString`) to readers; switch the displayed form to `ro-RO`, keep ISO in CSV and URL.
-- **D-4** Error states („Eroare: …”) have no retry action.
+- ~~**D-4** Error states have no retry action.~~ Fixed by OP-12.
 - **D-5** Thin-sample warnings are not yet shown on every view that ranks by median.
 - **D-6** The provenance line is split between `#la-zi` and the footer `#meta`; merge
   into one „Date: …” line under the H1.

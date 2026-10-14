@@ -95,3 +95,17 @@ test('the phone tab bar shows that it scrolls', async ({ page }) => {
     return r.left >= t.left - 1 && r.right <= t.right + 1;
   })).toBe(true);
 });
+
+test('a failed query offers a retry that runs it again', async ({ page, context }) => {
+  // On the context, not the page: DuckDB-Wasm fetches the Parquet files from its worker.
+  await page.goto('/#v=sumar');
+  await expect(page.locator('#out tbody tr:not(.skeleton)').first()).toBeVisible();
+  await context.route('**/*.parquet', route => route.abort());
+  await page.locator('#tabs [data-key="cpv"]').click();
+  const retry = page.locator('#status button', { hasText: 'Reîncearcă' });
+  await expect(retry).toBeVisible();
+  await context.unroute('**/*.parquet');
+  await retry.click();
+  await expect(page.locator('#out tbody tr:not(.skeleton)').first()).toBeVisible();
+  await expect(retry).toHaveCount(0);
+});
