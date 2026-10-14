@@ -30,6 +30,11 @@ HUB_NAME = ("Proiecte civice", "Civic projects")
 TOOL_NAME = ("Achiziții publice din România", "Open Procurement")
 STATUS = ("Date reale", "Live data")
 REPO = "https://github.com/CristianNichifor/open-procurement"
+PROVENANCE = ("Date: data.gov.ro, exporturile trimestriale ANAP/ADR, 2016–2026",
+              "Data: data.gov.ro, ANAP/ADR quarterly exports, 2016–2026")
+PROVENANCE_LINKS = [("./", "Datele", "The data"), ("metodologie.html", "Metodologie", "Methodology"),
+                    ("replica.html", "Drept la replică", "Right of reply")]
+CONTENTS = ("Cuprins", "Contents")
 
 # Same-repo Markdown files that have a page on the site. Anything else would 404.
 LINKS = {
@@ -80,7 +85,7 @@ def _split_corrections() -> tuple[str, str]:
 def _md(text: str) -> str:
     # Bare URLs are links on GitHub; python-markdown needs them in angle brackets.
     text = re.sub(r"(?<![(<\[])(https://[^\s)>\]]+)", r"<\1>", text)
-    out = markdown.markdown(text, extensions=["tables", "fenced_code"])
+    out = markdown.markdown(text, extensions=["tables", "fenced_code", "toc"])
     for source, page in LINKS.items():
         out = out.replace(f'href="{source}"', f'href="{page}"')
     return out
@@ -121,6 +126,32 @@ def _bilingual(ro: str, en: str) -> str:
             f'<span data-lang="en" lang="en">{html.escape(en)}</span>')
 
 
+def _provenance(name: str, lang: int) -> str:
+    """One „Date: …” line under the H1 (guideline §2.3), the current page marked."""
+    current = ' aria-current="page"'
+    links = " · ".join(
+        f'<a href="{href}"{current if href == name else ""}>{html.escape(labels[lang])}</a>'
+        for href, *labels in PROVENANCE_LINKS
+    )
+    return f'<p class="provenance">{html.escape(PROVENANCE[lang])} · {links}</p>'
+
+
+def _contents(body: str, lang: int) -> str:
+    """A table of contents from the h2 ids python-markdown's toc extension adds; only
+    worth it on a page with at least four sections."""
+    heads = re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', body)
+    if len(heads) < 4:
+        return ""
+    items = "".join(f'<li><a href="#{i}">{txt}</a></li>' for i, txt in heads)
+    return f'<nav class="toc" aria-label="{CONTENTS[lang]}"><ol>{items}</ol></nav>'
+
+
+def _article(name: str, text: str, lang: int) -> str:
+    body = _md(text)
+    head, rest = body.split("</h1>", 1)
+    return head + "</h1>\n" + _provenance(name, lang) + "\n" + _contents(body, lang) + rest
+
+
 def render(name: str) -> str:
     page = PAGES[name]
     title_ro, title_en = page["title"]
@@ -158,10 +189,10 @@ data-title-en="{html.escape(title_en)} — Open Procurement">
 </header>
 <main>
 <article data-lang="ro" lang="ro">
-{_md(ro)}
+{_article(name, ro, 0)}
 </article>
 <article data-lang="en" lang="en">
-{_md(en)}
+{_article(name, en, 1)}
 </article>
 </main>
 <footer>
