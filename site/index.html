@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-EYBRWxyReJS2KvOhQjWcpejOxCFa4W//zKFRTeXrsB0=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-mFSMLfeUWJBhX33D43YFqgLk0jxxs+q2/9F6wrcHZtM=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -216,6 +216,8 @@
            background:var(--paper); box-shadow:-6px 0 6px -6px var(--line); }
   tr.drillable:hover td.cta, tr.drillable:focus-visible td.cta { background:var(--accent-soft); }
   td.slab { color:var(--muted); font-style:italic; }
+  .semnal-bar { display:inline-block; height:.7rem; background:var(--accent); border-radius:2px; vertical-align:middle; }
+  .semnale-tbl td:last-child { width:40%; }
   .nota-slab { color:var(--muted); font-size:.8rem; margin:.4rem 0 0; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px;
              overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
@@ -1986,22 +1988,46 @@ async function runPanorama() {
       'Fiecare semnal are un temei legal citat și înseamnă „merită o privire”, niciodată '
       + '„este ilegal”. Multe au explicații perfect legale.',
     );
-    const ul = document.createElement('ul');
-    ul.className = 'legend';
-    ul.style.flexDirection = 'column';
-    ul.style.gap = '.3rem';
+    // One table, three columns: the signal (a button that opens it), its count, and a
+    // bar proportional to the count. The same rows serve as the chart and as the table,
+    // so a screen reader and a sighted reader get the same thing (design screen 01).
+    const most = Math.max(1, ...semnale.map((ind) => Number(ind.rows || 0)));
+    const w = document.createElement('div');
+    w.className = 'wrap';
+    const t = document.createElement('table');
+    t.className = 'tbl semnale-tbl';
+    const head = t.createTHead().insertRow();
+    for (const h of ['Semnal', 'Achiziții', '']) {
+      const th = document.createElement('th');
+      th.textContent = h;
+      head.append(th);
+    }
+    const body = t.createTBody();
     for (const ind of semnale) {
-      const li = document.createElement('li');
+      const n = Number(ind.rows || 0);
+      const tr = body.insertRow();
       const b = document.createElement('button');
       b.type = 'button';
       b.style.cssText = 'cursor:pointer;color:var(--accent);background:none;border:none;'
                       + 'padding:0;font:inherit;text-align:left';
-      b.textContent = `${ind.nume || ind.id} — ${Number(ind.rows || 0).toLocaleString('ro-RO')}`;
+      b.textContent = ind.nume || ind.id;
       b.onclick = () => selectTab('indicatori', ind);
-      li.append(b);
-      ul.append(li);
+      tr.insertCell().append(b);
+      const num = tr.insertCell();
+      num.className = 'num';
+      num.textContent = n.toLocaleString('ro-RO');
+      const bar = document.createElement('span');
+      bar.className = 'semnal-bar';
+      bar.style.width = `${Math.max(2, Math.round((n / most) * 100))}%`;
+      bar.setAttribute('aria-hidden', 'true');
+      tr.insertCell().append(bar);
     }
-    sec.append(ul);
+    w.append(t);
+    sec.append(w);
+    const legend = document.createElement('p');
+    legend.className = 'legend nota-slab';
+    legend.textContent = 'Lungimea barei: numărul de achiziții marcate de semnal, față de semnalul cu cele mai multe.';
+    sec.append(legend);
   }
 
   // ---- 3. who buys ----------------------------------------------------------
