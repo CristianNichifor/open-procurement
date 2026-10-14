@@ -58,7 +58,8 @@ success. Add a small regression fixture for changed behavior, including provenan
 for real source excerpts; disclose untested paths and data coverage limits.
 Use Conventional Commits with an imperative lower-case subject, no trailing period,
 and at most 72 characters. Link issues with `Refs: #N` or `Closes: #N` trailers.
-Open PRs against `dev`; agents never merge or deploy. Keep the existing license.
+Open PRs against `dev`; agents may squash-merge into `dev` once every required
+check is green, but never merge into `main` or deploy. Keep the existing license.
 
 No private handbook, 1Password, production credentials, or production collection is
 needed for contributor verification. Publishing and collection are maintainer tasks,

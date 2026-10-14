@@ -33,5 +33,6 @@ remain untouched, and release bundles are not a prerequisite for core fixture wo
 Preserve the SEAP collection hold and rate limits; see [source notes](sources.md)
 and [hold decision](adr-revenire.md). Do not contact SEAP, run bulk ingest, refresh
 production state or publish merely to verify a code change. Fork PR tests consume
-public released aggregates without publishing credentials. Agents never merge or
-deploy, even with administrator credentials.
+public released aggregates without publishing credentials. Agents may
+squash-merge into `dev` once every required check is green; they never merge into
+`main`, bypass rules or deploy, even with administrator credentials.
