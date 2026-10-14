@@ -10,10 +10,19 @@
 * { box-sizing: border-box; }
 body { margin:0; padding:1.5rem 1rem 4rem; background:var(--paper); color:var(--ink);
        font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif; }
-.page-head, main, footer { max-width: 760px; margin: 0 auto; }
-.page-head { display:flex; justify-content:space-between; align-items:center; gap:1rem;
-             padding-bottom:1rem; border-bottom:1px solid var(--line); margin-bottom:1.5rem; }
-.home { font-weight:700; color:var(--accent); text-decoration:none; }
+.family-bar, main, footer { max-width: 760px; margin: 0 auto; }
+/* Family bar (civic-ui FamilyBar, native markup): hub link, tool name, status, language. */
+.family-bar { display:flex; align-items:center; flex-wrap:wrap; gap:.25rem 1rem;
+              padding-bottom:1rem; border-bottom:1px solid var(--line); margin-bottom:1.5rem; }
+.family-bar a { display:inline-flex; align-items:center; min-height:44px; text-decoration:none; }
+.hub { color:var(--ink); font-weight:600; }
+.home { font-weight:700; color:var(--accent); }
+.status-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.1rem .55rem;
+  border-radius:999px; font-size:.8rem; font-weight:600; color:#146c2e; background:#e6f4ea; }
+.status-badge::before { content:""; width:.5rem; height:.5rem; border-radius:50%; background:currentColor; }
+@media (prefers-color-scheme: dark) { .status-badge { color:#7fd69a; background:#14261a; } }
+.family-bar .lang-toggle { margin-left:auto; }
+@media (max-width: 480px) { .family-bar .home { flex-basis:100%; min-height:32px; } }
 a { color: var(--accent); }
 .lang-toggle { display:flex; gap:.25rem; }
 .lang-toggle button { min-width:44px; min-height:44px; border:1px solid var(--line);

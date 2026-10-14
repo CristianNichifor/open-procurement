@@ -24,6 +24,11 @@ import markdown
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 CANONICAL = "https://projects.cristian-nichifor.com/open-procurement/"
+# The hub and the names come from the civic-ui naming registry (docs/ux-guidelines.md §9).
+HUB = "https://projects.cristian-nichifor.com/"
+HUB_NAME = ("Proiecte civice", "Civic projects")
+TOOL_NAME = ("Achiziții publice din România", "Open Procurement")
+STATUS = ("Date reale", "Live data")
 REPO = "https://github.com/CristianNichifor/open-procurement"
 
 # Same-repo Markdown files that have a page on the site. Anything else would 404.
@@ -142,8 +147,10 @@ def render(name: str) -> str:
 </head>
 <body data-title-ro="{html.escape(title_ro)} — Open Procurement" \
 data-title-en="{html.escape(title_en)} — Open Procurement">
-<header class="page-head">
-  <a class="home" href="./">Open Procurement</a>
+<header class="family-bar">
+  <a class="hub" href="{HUB}">← {_bilingual(*HUB_NAME)}</a>
+  <a class="home" href="./">{_bilingual(*TOOL_NAME)}</a>
+  <span class="status-badge">{_bilingual(*STATUS)}</span>
   <div class="lang-toggle" role="group" aria-label="Limba / Language">
     <button type="button" data-set-lang="ro" lang="ro" aria-pressed="true">RO</button>
     <button type="button" data-set-lang="en" lang="en" aria-pressed="false">EN</button>

@@ -45,3 +45,19 @@ def test_the_toggle_script_sets_the_document_language() -> None:
     assert "document.documentElement.lang" in js
     assert "aria-pressed" in js
     assert "lang=en" in js or "'lang'" in js, "the choice must survive a reload"
+
+
+# OP-13: every static page starts with the family bar back to the hub.
+HUB = "https://projects.cristian-nichifor.com/"
+STATIC = ("metodologie.html", "replica.html", "privacy.html")
+
+
+def test_static_pages_carry_the_family_bar() -> None:
+    for name in STATIC:
+        html = (SITE / name).read_text(encoding="utf-8")
+        head = html.split("<main>", 1)[0]
+        assert 'class="family-bar"' in head, name
+        assert f'href="{HUB}"' in head and "Proiecte civice" in head, name
+        assert 'href="./"' in head and "Achiziții publice din România" in head, name
+        assert "Date reale" in head, name
+        assert "data-set-lang" in head, name
