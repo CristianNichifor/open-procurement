@@ -65,6 +65,16 @@ English only) is agent-written: **needs human review**.
 
 Test: `tests/browser/cdn-fallback.spec.js` (route `**/cdn.jsdelivr.net/**` aborted).
 
+### OP-24 Spec items have unique ids and a named test (done)
+
+- Given `docs/specs/production-readiness.md`, when its `###` headings are read, then each
+  is `ID title (status)` with a status from the list above, no id is used twice (the
+  doubled `OP-9` from before this guard is the one tolerated exception) and every item
+  has a `Test:` line, so parallel sessions cannot land the same number twice as happened
+  with OP-12 on 2026-10-14.
+
+Test: `tests/test_spec_ids.py`.
+
 ### OP-7 Content Security Policy and accessibility scan (done)
 
 - Given each page, then a `<meta http-equiv="Content-Security-Policy">` allows only self,
@@ -83,6 +93,19 @@ Test: `tests/browser/cdn-fallback.spec.js` (route `**/cdn.jsdelivr.net/**` abort
 Tests: `tests/test_site_meta.py` (CSP), `tests/browser/csp.spec.js`,
 `tests/browser/a11y.spec.js` (axe-core 4.13 via `@axe-core/playwright`, both colour
 schemes). The scan found no serious or critical violations, so nothing needed fixing.
+
+### OP-23 No internal terms in the interface (done)
+
+- Given every page under `site/` except the privacy notice and the methodology (which
+  name the plumbing on purpose), when its visible text and the Romanian string literals
+  of its script are read, then none of the terms banned by `docs/ux-guidelines.md` §3
+  appears: DuckDB, Parquet, bundle, R2, OCDS, bucket, release, `n minim`.
+- Given a string that still violates the rule, then it is listed in the test as a
+  ceiling with the deviation it belongs to, so no new violation can land. Today: „fișierele Parquet” twice on the
+  front page (new deviation D-8, to add to the guideline once `docs/ux-guidelines.md`
+  is free to edit) and `n minim` once (D-7, being replaced).
+
+Test: `tests/test_site_vocabulary.py`.
 
 ### DOC-1 SEAP incident status (done)
 
@@ -240,6 +263,21 @@ Test: `tests/test_ux_guidelines.py`, `tests/test_site_links.py`.
   review.
 
 Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it again".
+### OP-14 Design screens for the five main views (done)
+
+- Given `docs/design/screens/`, when it is read, then it holds self-contained HTML
+  mockups for the home (search-first, typeahead), entity file, unit prices (desktop and
+  phone rows), signals and methodology screens, each with a 390 px layout and the
+  loading, empty, error-with-retry and stale-data states, and no script or external
+  request.
+- Given `docs/design/README.md`, then every screen names the user task, the guideline
+  sections it follows, what changes versus the live site and acceptance criteria.
+- Given any mockup, then Romanian text uses comma-below ș ț and every figure is either
+  copied from the live site on 2026-10-14 or shown as „—”.
+
+Test: `tests/test_design_screens.py` (no `<script`, no `http` other than the hub link,
+no cedilla diacritics, the five files and the README exist). Romanian copy in the
+mockups is agent-written: **needs human review**.
 
 ### OP-13 A plain label for the group-size filter (done)
 
@@ -247,6 +285,47 @@ Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it
   pe grup” instead of „n minim”. Closes D-7. Agent-written: needs human review.
 
 Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
+### OP-18 Family bar on the static pages (done)
+
+- Given `metodologie.html`, `replica.html` and `privacy.html`, when the page is read, then
+  the first thing in the `<header>` is a family bar (civic-ui `FamilyBar`, native markup):
+  a link „Proiecte civice” to `https://projects.cristian-nichifor.com/`, the tool name
+  „Achiziții publice din România” linking to `./`, the status badge „Date reale” from the
+  §7 vocabulary and the RO/EN toggle, with every target at least 44 px tall.
+- Given `scripts/build_pages.py`, when it runs, then the committed pages equal its output
+  (OP-5 still holds) and `site/index.html` is left unchanged.
+- The front page's family bar (the other half of D-1) is a separate item: `site/index.html`
+  is being edited by other open PRs. Hub address and names come from the civic-ui naming
+  registry (`docs/ux-guidelines.md` §9 on civic-ui `dev`).
+
+Test: `tests/test_site_pages.py` („family bar”). Romanian strings agent-written: **needs
+human review**.
+
+### OP-15 Provenance line and contents on the static pages (done)
+
+- Given `metodologie.html`, `replica.html` and `privacy.html`, when either language is
+  shown, then directly under the H1 there is one provenance line „Date: data.gov.ro,
+  exporturile trimestriale ANAP/ADR, 2016–2026” followed by links to the data, the
+  methodology and the right of reply (the current page marked `aria-current`), as the
+  page anatomy in `docs/ux-guidelines.md` §2 and the methodology screen in
+  `docs/design/README.md` require.
+- Given `metodologie.html`, then each language's article has a table of contents
+  („Cuprins” / „Contents”) whose links point at ids that exist on the page's `h2`s.
+- Given `scripts/build_pages.py`, then the committed pages equal its output and
+  `site/index.html` is unchanged.
+
+Test: `tests/test_site_pages.py` („provenance”, „contents”). Romanian strings
+agent-written: **needs human review**.
+
+### OP-26 Status badge from the vocabulary (done)
+
+- Given the front door, then exactly one badge under the H1 carries one of „Date reale”,
+  „Date demonstrative”, „Prototip”, „Arhivat” (UX guidelines §7); it says „Date reale”,
+  and the as-of line below it keeps saying how old the newest data is.
+
+Test: `tests/test_site_status.py`. Romanian badge title is agent-written: **needs human
+review**. Closes D-2 in `docs/ux-guidelines.md`.
+
 ### OP-22 Entity head before the engine (done)
 
 - Given a search term that matches one entry of `site/data/entitati.json` exactly (its
