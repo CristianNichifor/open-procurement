@@ -84,6 +84,19 @@ Tests: `tests/test_site_meta.py` (CSP), `tests/browser/csp.spec.js`,
 `tests/browser/a11y.spec.js` (axe-core 4.13 via `@axe-core/playwright`, both colour
 schemes). The scan found no serious or critical violations, so nothing needed fixing.
 
+### OP-16 No internal terms in the interface (done)
+
+- Given every page under `site/` except the privacy notice and the methodology (which
+  name the plumbing on purpose), when its visible text and the Romanian string literals
+  of its script are read, then none of the terms banned by `docs/ux-guidelines.md` §3
+  appears: DuckDB, Parquet, bundle, R2, OCDS, bucket, release, `n minim`.
+- Given a string that still violates the rule, then it is listed in the test as a
+  ceiling with the deviation it belongs to, so no new violation can land. Today: „fișierele Parquet” twice on the
+  front page (new deviation D-8, to add to the guideline once `docs/ux-guidelines.md`
+  is free to edit) and `n minim` once (D-7, being replaced).
+
+Test: `tests/test_site_vocabulary.py`.
+
 ### DOC-1 SEAP incident status (done)
 
 - Given `docs/incident-2026-09-07-seap-block.md`, then it carries a dated Status section
