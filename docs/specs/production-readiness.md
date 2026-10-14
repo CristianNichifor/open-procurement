@@ -247,6 +247,16 @@ Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it
   pe grup” instead of „n minim”. Closes D-7. Agent-written: needs human review.
 
 Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
+### OP-17 Thin groups marked on every median view (done)
+
+- Given any table whose rows carry a product, a median and the percentiles, when a group
+  rests on fewer than 10 prices, then its median cell is greyed (`td.slab`) and one note
+  under the table says the greyed figures are only indicative; the threshold is one
+  module-level constant shared with the front door.
+- Given a re-render of the same table (paging, sorting), then the note appears once.
+
+Test: `tests/test_site_thin.py`; `tests/browser/ux.spec.js` („thin groups marked”).
+Closes D-5 in `docs/ux-guidelines.md`.
 
 ## Workflow-only (diff in the PR body for the maintainer)
 
