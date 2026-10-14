@@ -138,6 +138,73 @@ limiter only spaced consecutive requests, per client instance.
 Tests: `tests/test_rate_limit.py` (fake clock: the 5-minute cap, the per-second cap, the
 minimum spacing, retries counted, backoff on 429/403/5xx, env clamp).
 
+### OP-29 At most two SEAP requests in any second, on one path (todo)
+
+The hold on scheduled collection is lifted on the owner's decision (2026-10-14), on the
+condition that SEAP's published limits are respected: more than 500 HTTP requests in 5
+minutes, or more than 50 in one second, from one IP gets it blocked, whatever the URL.
+
+- Given the default settings, when any number of requests are sent, then no rolling
+  300 seconds holds more than 450 and no one second holds more than 2
+  (`config.SEAP_MAX_BURST` = 2, no bursts); retries count.
+- Given the source tree, then only `src/achizitii/client.py` names the SEAP host, so the
+  daily ingest, the backfill and any helper all go through `SeapClient` and its one
+  process-wide limiter.
+
+Tests: `tests/test_rate_limit.py`.
+
+### OP-30 A circuit breaker stops the whole run at the first sign of a block (todo)
+
+- Given an HTTP 403 or 429, or a page that reads as SEAP's block notice or a captcha,
+  when it arrives, then the breaker opens at once: that request is not retried and every
+  later request in the process fails without being sent.
+- Given 3 consecutive connection failures (across all requests), then the breaker opens
+  the same way; any HTTP response in between resets the count.
+- Given the breaker opens while a day is being collected, then that day is discarded
+  (nothing of it is written), the days completed before it are kept, the run stops, and
+  `achizitii seap` exits non-zero with the reason in its report.
+
+Tests: `tests/test_seap_breaker.py`.
+
+### OP-31 The scheduled run collects again, one at a time (todo)
+
+- Given `.github/workflows/publish-data.yml`, then a scheduled run and a manual run both
+  call `achizitii seap`; a push to `main` still only rebuilds the bundle.
+- Given the ingest job, then `timeout-minutes` is at least 300 (a weekday is about 9,700
+  requests, about 1 h 50 min at the cap).
+- Given `publish-data.yml` and `backfill.yml`, then both declare the same `concurrency`
+  group with `cancel-in-progress: false`, so two runs that reach SEAP never overlap.
+- Given a failed run, then a step opens the issue „SEAP collection failed”, or comments
+  on it if it is open, with the reason from the ingest report and a link to the run.
+
+Tests: `tests/test_seap_schedule.py`.
+
+### OP-32 The run summary proves the limits held (todo)
+
+- Given a run of `achizitii seap`, whether it completes or the breaker stops it, then the
+  JSON report and `$GITHUB_STEP_SUMMARY` give the total requests sent, the most sent in
+  any rolling 5 minutes and the most sent in any one second, next to the enforced and
+  published limits, measured at send time by the shared limiter.
+
+Tests: `tests/test_rate_limit.py`, `tests/test_seap_breaker.py`.
+
+### OP-33 Backfill one day per dispatch (todo)
+
+- Given `.github/workflows/backfill.yml`, then it takes one `day` input, collects exactly
+  that day with `achizitii seap`, shares the concurrency group and the limiter with the
+  daily run, and opens the same failure issue.
+- Given a day that has not yet ended in Romanian time, then `achizitii seap` refuses it.
+
+Tests: `tests/test_seap_schedule.py`, `tests/test_seap_breaker.py`.
+
+### DOC-2 SEAP incident: the hold is lifted (todo)
+
+- Given `docs/incident-2026-09-07-seap-block.md`, then a Status section dated 2026-10-14
+  says the hold is lifted on the owner's decision, states the published limits, how they
+  are enforced, the circuit breaker, and how to backfill the days missed since 2026-10-12.
+
+Test: review only (documentation).
+
 ## Theme C: first-visit experience (UX review of the live site, 2026-10-14)
 
 Measured on the live site: "Caută" stayed disabled for ~29 s on a cold load, a search for
@@ -422,6 +489,6 @@ Test: `tests/test_site_entity_facts.py`.
 
 ## Needs human
 
-- Lifting the SEAP collection hold (needs an ADR).
+- An ADR recording the owner's decision to resume SEAP collection (OP-31).
 - R2 line items, OCDS/Zenodo publication.
 - Promotion PR #98 (dev to main), which stops the daily data loss on main.
