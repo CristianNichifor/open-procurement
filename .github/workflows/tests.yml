@@ -18,6 +18,12 @@ on:
   pull_request:
   push:
     branches: [dev, main]
+  # publish-data.yml opens the daily data pull request with the job's own GITHUB_TOKEN, and
+  # GitHub never starts a `pull_request` run for events that token caused. Without a run
+  # the `verify` check that dev requires stays "expected" forever and the day cannot be
+  # merged. A dispatch is the one event the token may raise, so publish-data.yml starts
+  # this workflow on the data branch and the checks land on the same commit.
+  workflow_dispatch:
 
 permissions:
   contents: read
