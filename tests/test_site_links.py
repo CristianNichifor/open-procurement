@@ -160,3 +160,71 @@ def test_the_reader_is_told_the_link_exists(source: str) -> None:
         "clipboard needs a secure context; serving the folder over plain HTTP locally "
         "must say where the link is rather than fail silently"
     )
+
+
+# --- Pages a reader can reach without leaving the site -------------------------------
+#
+# The caveat sent readers to GitHub's file viewer for the methodology and the right of
+# reply: a different site, an English-only code-hosting interface, and a link that breaks
+# the day a file is renamed. And nothing at all said what the site does with visitors.
+
+SITE = Path("site")
+ISSUES = "https://github.com/CristianNichifor/open-procurement/issues"
+STATIC_PAGES = ("privacy.html", "metodologie.html", "replica.html")
+
+
+def test_no_page_links_into_the_github_file_viewer() -> None:
+    import re
+
+    offenders = [
+        str(p) for p in SITE.rglob("*.html")
+        if "vendor" not in p.parts
+        and re.search(r"github\.com/[^\s\"']*/blob/", p.read_text(encoding="utf-8"))
+    ]
+    assert not offenders, f"link the same-origin page instead: {offenders}"
+
+
+def test_the_caveat_links_to_pages_on_this_site(source: str) -> None:
+    caveat = source.split('id="banner"')[1].split("</details>")[0]
+    assert 'href="metodologie.html"' in caveat
+    assert 'href="replica.html"' in caveat
+
+
+def test_the_footer_links_the_privacy_page(source: str) -> None:
+    footer = source.split("<footer>")[1].split("</footer>")[0]
+    assert 'href="privacy.html"' in footer
+
+
+@pytest.mark.parametrize("page", STATIC_PAGES)
+def test_every_static_page_exists_in_both_languages(page: str) -> None:
+    html = (SITE / page).read_text(encoding="utf-8")
+    assert '<html lang="ro">' in html
+    assert 'data-lang="ro"' in html and 'data-lang="en"' in html
+    assert 'data-set-lang="en"' in html, "the RO/EN toggle is missing"
+    assert '<script src="lang.js" defer></script>' in html
+    assert 'href="./"' in html, "a way back to the data"
+    assert 'href="privacy.html"' in html
+
+
+def test_the_privacy_page_states_what_the_code_shows() -> None:
+    html = (SITE / "privacy.html").read_text(encoding="utf-8")
+    ro = html.split('data-lang="ro"')[1].split('data-lang="en"')[0]
+    en = html.split('data-lang="en"')[1]
+    for needle in ("cookie", "Cloudflare Pages", "GitHub Pages", "cdn.jsdelivr.net",
+                   "Cristian Nichifor", ISSUES):
+        assert needle in ro, f"RO text lacks {needle!r}"
+        assert needle in en, f"EN text lacks {needle!r}"
+    assert "analytics" in en.lower() and "analiză" in ro.lower()
+    assert "ş" not in html and "ţ" not in html, "comma-below ș ț, never the cedilla forms"
+
+
+def test_the_no_cookies_claim_stays_true() -> None:
+    """The privacy page says no cookies and no analytics. That is only true while no
+    page on the site writes a cookie, uses storage, or loads a measurement script."""
+    for p in SITE.rglob("*.html"):
+        if "vendor" in p.parts:
+            continue
+        text = p.read_text(encoding="utf-8")
+        for needle in ("document.cookie", "localStorage", "sessionStorage",
+                       "googletagmanager", "google-analytics", "plausible", "matomo"):
+            assert needle not in text, f"{p} uses {needle}; update privacy.html first"
