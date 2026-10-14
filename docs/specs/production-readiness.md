@@ -263,6 +263,22 @@ Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_
 Test: `tests/test_site_pages.py` („family bar”). Romanian strings agent-written: **needs
 human review**.
 
+### OP-15 Provenance line and contents on the static pages (done)
+
+- Given `metodologie.html`, `replica.html` and `privacy.html`, when either language is
+  shown, then directly under the H1 there is one provenance line „Date: data.gov.ro,
+  exporturile trimestriale ANAP/ADR, 2016–2026” followed by links to the data, the
+  methodology and the right of reply (the current page marked `aria-current`), as the
+  page anatomy in `docs/ux-guidelines.md` §2 and the methodology screen in
+  `docs/design/README.md` require.
+- Given `metodologie.html`, then each language's article has a table of contents
+  („Cuprins” / „Contents”) whose links point at ids that exist on the page's `h2`s.
+- Given `scripts/build_pages.py`, then the committed pages equal its output and
+  `site/index.html` is unchanged.
+
+Test: `tests/test_site_pages.py` („provenance”, „contents”). Romanian strings
+agent-written: **needs human review**.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.
