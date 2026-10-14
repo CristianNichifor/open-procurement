@@ -317,6 +317,15 @@ human review**.
 Test: `tests/test_site_pages.py` („provenance”, „contents”). Romanian strings
 agent-written: **needs human review**.
 
+### OP-26 Status badge from the vocabulary (done)
+
+- Given the front door, then exactly one badge under the H1 carries one of „Date reale”,
+  „Date demonstrative”, „Prototip”, „Arhivat” (UX guidelines §7); it says „Date reale”,
+  and the as-of line below it keeps saying how old the newest data is.
+
+Test: `tests/test_site_status.py`. Romanian badge title is agent-written: **needs human
+review**. Closes D-2 in `docs/ux-guidelines.md`.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.
