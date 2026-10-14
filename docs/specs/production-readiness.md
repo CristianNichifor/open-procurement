@@ -247,6 +247,21 @@ Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it
   pe grup” instead of „n minim”. Closes D-7. Agent-written: needs human review.
 
 Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
+### OP-13 Family bar on the static pages (done)
+
+- Given `metodologie.html`, `replica.html` and `privacy.html`, when the page is read, then
+  the first thing in the `<header>` is a family bar (civic-ui `FamilyBar`, native markup):
+  a link „Proiecte civice” to `https://projects.cristian-nichifor.com/`, the tool name
+  „Achiziții publice din România” linking to `./`, the status badge „Date reale” from the
+  §7 vocabulary and the RO/EN toggle, with every target at least 44 px tall.
+- Given `scripts/build_pages.py`, when it runs, then the committed pages equal its output
+  (OP-5 still holds) and `site/index.html` is left unchanged.
+- The front page's family bar (the other half of D-1) is a separate item: `site/index.html`
+  is being edited by other open PRs. Hub address and names come from the civic-ui naming
+  registry (`docs/ux-guidelines.md` §9 on civic-ui `dev`).
+
+Test: `tests/test_site_pages.py` („family bar”). Romanian strings agent-written: **needs
+human review**.
 
 ## Workflow-only (diff in the PR body for the maintainer)
 
