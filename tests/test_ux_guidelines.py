@@ -32,3 +32,9 @@ def test_the_guideline_uses_comma_below_diacritics_only() -> None:
     text = GUIDE.read_text(encoding="utf-8")
     cedilla = {c for c in "şţŞŢ" if c in text.replace("never ş ţ (cedilla)", "")}
     assert not cedilla
+
+
+def test_the_group_size_filter_has_a_plain_label() -> None:
+    html = Path("site/index.html").read_text(encoding="utf-8")
+    label = html.split('<label for="minn">')[1].split("</label>")[0]
+    assert label == "Minimum de achiziții pe grup"
