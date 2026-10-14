@@ -270,6 +270,12 @@ jobs:
             # settings. The branch is pushed either way, so the day is not lost.
             echo "::warning::could not open the pull request; open it from $BRANCH by hand: ${{ github.server_url }}/${{ github.repository }}/compare/dev...$BRANCH"
           fi
+          # A pull request this token opened gets no `pull_request` run, so `verify` (which
+          # dev requires) would never report. A dispatch is the one event the token may
+          # raise; it puts the same checks on the branch's head commit.
+          if ! gh workflow run tests.yml --ref "$BRANCH"; then
+            echo "::warning::could not start tests.yml on $BRANCH; run it by hand so the pull request can merge"
+          fi
 
       - name: Save the authority cache
         if: always() && hashFiles('data/autoritati.parquet') != ''
