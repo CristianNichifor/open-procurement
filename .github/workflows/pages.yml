@@ -1,30 +1,18 @@
 name: pages
 
-# Publishes site/ to GitHub Pages.
+# GitHub Pages now serves only a redirect. The site is published to Cloudflare Pages by
+# deploy-pages-cloudflare.yml and served at projects.cristian-nichifor.com/open-procurement/;
+# redirect/ holds an index.html and a 404.html (the page GitHub Pages returns for any unknown
+# path) that send cristiannichifor.github.io/open-procurement/<rest>?<query>#<hash> to the same
+# place there, so every link already shared keeps opening the view it was shared for.
 #
-# The bundle under site/data is NOT built here. data.gov.ro is unreachable from GitHub
-# and Azure IP ranges — four 60-second connect timeouts against 0.93s from a local
-# machine — which is also why bulk.yml has no schedule. So the source data cannot be
-# fetched in CI; it is generated locally with `achizitii publish`. See docs/sources.md.
-#
-# Being unbuildable here does not mean it has to be *committed*, though, and that is the
-# part that turned out to cost something. `docs/storage.md` says git keeps every version
-# of a file forever — true of the line items, which is why they went to R2, and equally
-# true of the aggregates, which stayed. Measured 2026-09-10: three regenerated rollups
-# account for 271 MB of a 302 MB pack, from files whose current versions total 13.7 MB.
-#
-# So the bundle is published as a release asset and fetched here instead. It still ends up
-# in the Pages artifact, unchanged, which is what `docs/storage.md` requires: ordinary
-# reads keep hitting Pages and never touch R2.
-#
-# The fetch is skipped while the bundle is still in the checkout. That ordering is on
-# purpose — this path gets exercised by a real deploy before anything is deleted from git.
+# Nothing is built here: no install, no bundle fetch.
 
 on:
   push:
     branches: [main]
     paths:
-      - 'site/**'
+      - 'redirect/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -47,41 +35,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Shared with tests.yml, which needs the same files to assert anything about them.
-      - name: Fetch the bundle
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: ./scripts/fetch_bundle.sh
-
-      # Deploying an empty shell is worse than not deploying: the page would load,
-      # report a missing manifest, and look like a site that is merely broken.
-      - name: Verify the bundle is present
+      # A redirect that points at nothing is worse than no redirect: it turns a working link
+      # into a loop through a 404. Checked here so the stub cannot go live before the site it
+      # forwards to.
+      - name: Check the destination is live
         run: |
-          if [ ! -f site/data/manifest.json ]; then
-            echo "::error::site/data/manifest.json is missing."
-            echo "Run 'achizitii publish' locally and commit site/data/."
-            exit 1
-          fi
-          python3 - <<'PY'
-          import json, pathlib, sys
-          m = json.loads(pathlib.Path("site/data/manifest.json").read_text())
-          missing = [
-              d["file"] for d in m.get("datasets", []) + m.get("indicatori", [])
-              if not pathlib.Path("site/data", d["file"]).is_file()
-          ]
-          if missing:
-              sys.exit(f"::error::manifest lists files that are not present: {missing}")
-          total = sum(p.stat().st_size for p in pathlib.Path("site").rglob("*") if p.is_file())
-          print(f"bundle OK: {len(m.get('datasets', []))} datasets, "
-                f"{len(m.get('indicatori', []))} indicators, {total/1e6:.1f} MB")
-          # GitHub Pages refuses sites over 1 GB; fail early with a clear reason.
-          if total > 900_000_000:
-              sys.exit(f"::error::site is {total/1e6:.0f} MB, too close to the 1 GB Pages limit")
-          PY
+          url=https://projects.cristian-nichifor.com/open-procurement/
+          code=$(curl -s -o /dev/null -w '%{http_code}' -L "$url")
+          echo "$url -> $code"
+          [ "$code" = "200" ] || { echo "::error::destination is not serving; refusing to publish the redirect"; exit 1; }
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: redirect
       - id: deployment
         uses: actions/deploy-pages@v4
