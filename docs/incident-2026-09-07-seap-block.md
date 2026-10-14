@@ -16,7 +16,8 @@ That observation does not lift the hold. The scheduled trigger in
 `.github/workflows/publish-data.yml` stays off, guarded by `tests/test_seap_hold.py`,
 until an ADR records the decision to resume automated collection, at what rate, and what
 the answer to the 2026-09-08 request was. Until then SEAP is contacted only by a person
-starting a run by hand.
+starting a run by hand. The rate the collector enforces is in the follow-up of 2026-10-14
+at the end of this document.
 
 ## What happened
 
@@ -176,3 +177,38 @@ irrelevant. No bulk export makes the daily archive the product, growing forward,
 measurements support anyway: median-bearing product groups grew 21 → 75 → 136 → 253 over
 the first four weekdays collected, faster than linearly, because each new day both adds
 groups and pushes existing ones past the n=5 threshold.
+
+## Follow-up, 2026-10-14: the limit is enforced, not just configured
+
+The thresholds, restated as SEAP publishes them: an IP that makes **more than 500 HTTP
+requests within 5 minutes**, or **more than 50 in one second**, is blocked, whatever the
+URLs are. Run 38437561637 made 9,746 requests in 1h49m — about 1.49 a second, or 447 per
+5 minutes on average — so it ran at the line, and the limiter that kept it there only
+spaced consecutive requests, per client object. A second client, or a retry burst after a
+timeout, had a budget of its own.
+
+What the collector enforces now (`src/achizitii/client.py`, `RateLimiter`, one instance
+per process shared by every `SeapClient`, every worker thread and every retry):
+
+| Ceiling | Published | Enforced | Setting |
+|---|---|---|---|
+| requests in any rolling 5 minutes | 500 | 450 | `SEAP_MAX_PER_WINDOW` |
+| requests in any one second | 50 | 3 | `SEAP_MAX_BURST` |
+| sustained spacing | 1.67/s | 1.5/s (one every 0.67 s) | `MAX_RPS` |
+
+- Each call reserves the next free send slot against the three ceilings and sleeps until
+  it; the window is rolling, measured over reserved send times, not reset every 5 minutes.
+- A retry is a request SEAP sees, so it takes a slot like any other.
+- 403, 429 and 5xx are retried with exponential backoff (5, 10, 20 s) and then raised.
+  403 is in the set because it is the status of the block itself.
+- `ACHIZITII_SEAP_MAX_PER_WINDOW`, `ACHIZITII_SEAP_MAX_BURST` and `ACHIZITII_SEAP_MAX_RPS`
+  can lower these for a cautious run. Asking for more is clamped to 475 per window, 5 a
+  second and the matching sustained rate: the environment can tighten, never cross.
+
+`tests/test_rate_limit.py` proves the caps on a fake clock (1,200 requests never exceed
+450 in any 300 s; the fourth request in a second waits; four threads share one window;
+retries count; 404 is not retried) and that the defaults are the safe ones.
+
+Throughput is unchanged, so the workflow's 300-minute timeout still holds: one weekday is
+roughly 8,900 detail calls plus 36 list calls, about 1h40m at 1.5 a second. A manual
+backfill of more than two full days in one run would not fit, and should be split.
