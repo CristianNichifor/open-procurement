@@ -14,7 +14,8 @@ test.beforeEach(async ({ page }) => {
 
 test('the engine starts and queries run under the policy', async ({ page }) => {
   await page.goto('/#v=cpv');
-  await expect(page.locator('#run')).toBeEnabled();
+  // The tabs, not Caută: search is enabled during boot and queues until the engine is up.
+  await expect(page.locator('#tabs button').first()).toBeEnabled();
   await expect(page.locator('#out tbody tr').first()).toBeVisible();
   await page.goto('/#v=preturi');
   await expect(page.locator('#out tbody tr').first()).toBeVisible();

@@ -74,14 +74,14 @@ test('the front door: no stray bullets, thin groups marked, data date shown', as
     await expect(page.locator('#panorama td.slab').first()).toBeVisible();
     await expect(page.locator('#panorama .nota-slab')).toContainText('10');
   }
-  await expect(page.locator('#la-zi')).toContainText(/date până la \d{1,2} \S+ \d{4}/);
-  await expect(page.locator('footer')).toContainText(/date până la \d{1,2} \S+ \d{4}/);
+  await expect(page.locator('#la-zi')).toContainText(/[Dd]ate până la \d{1,2} \S+ \d{4}/);
+  await expect(page.locator('footer')).toContainText(/[Dd]ate până la \d{1,2} \S+ \d{4}/);
 });
 
 test('the phone tab bar shows that it scrolls', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/#v=ruti');
-  await expect(page.locator('#run')).toBeEnabled();
+  await expect(page.locator('#tabs button').first()).toBeEnabled();
   const tabs = page.locator('#tabs');
   expect(await tabs.evaluate(el => getComputedStyle(el).scrollSnapType)).toContain('x');
   expect(await tabs.evaluate(el => el.scrollWidth > el.clientWidth)).toBe(true);

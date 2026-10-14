@@ -7,7 +7,8 @@ for (const width of [390, 1440]) {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.goto('/#v=sumar');
-    await expect(page.locator('#run')).toBeEnabled();
+    // The tabs, not Caută: search is enabled during boot and queues until the engine is up.
+    await expect(page.locator('#tabs button').first()).toBeEnabled();
     const rows = page.locator('#out tbody tr');
     await expect(rows.first()).toBeVisible();
     const year = await page.locator('#an option').evaluateAll(options =>
@@ -29,7 +30,8 @@ for (const width of [390, 1440]) {
     expect(download.suggestedFilename()).toMatch(/\.csv$/);
     expect(await readFile(await download.path(), 'utf8')).toContain(year);
     await page.reload();
-    await expect(page.locator('#run')).toBeEnabled();
+    // The tabs, not Caută: search is enabled during boot and queues until the engine is up.
+    await expect(page.locator('#tabs button').first()).toBeEnabled();
     await expect(page.locator('#out')).toHaveText(before, { useInnerText: true });
     expect(page.url()).toBe(sharedUrl);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);

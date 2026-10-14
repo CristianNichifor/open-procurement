@@ -20,7 +20,8 @@ for (const colorScheme of ['light', 'dark']) {
     await page.emulateMedia({ colorScheme });
     await page.goto('/');
     await expect(page.locator('#panorama .pan').first()).toBeVisible();
-    await expect(page.locator('#run')).toBeEnabled();
+    // The tabs, not Caută: search is enabled during boot and queues until the engine is up.
+    await expect(page.locator('#tabs button').first()).toBeEnabled();
     await scan(page, info, 'front door');
     await page.goto('/#v=cpv');
     await expect(page.locator('#out tbody tr').first()).toBeVisible();
