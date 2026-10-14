@@ -208,8 +208,8 @@ def test_every_static_page_exists_in_both_languages(page: str) -> None:
 
 def test_the_privacy_page_states_what_the_code_shows() -> None:
     html = (SITE / "privacy.html").read_text(encoding="utf-8")
-    ro = html.split('data-lang="ro"')[1].split('data-lang="en"')[0]
-    en = html.split('data-lang="en"')[1]
+    ro = html.split('<article data-lang="ro"')[1].split('<article data-lang="en"')[0]
+    en = html.split('<article data-lang="en"')[1]
     for needle in ("cookie", "Cloudflare Pages", "GitHub Pages", "cdn.jsdelivr.net",
                    "extensions.duckdb.org", "Cristian Nichifor", ISSUES):
         assert needle in ro, f"RO text lacks {needle!r}"

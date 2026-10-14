@@ -131,3 +131,5 @@ wrong. Corrections are fixed **in the pipeline**, so they survive rebuilds.
    statistical position — never wrongdoing. See `METHODOLOGY.md`.
 
 For shared-control changes, preserve the [native Civic UI contract](docs/CIVIC_UI.md).
+For any page change, follow the [UX guidelines](docs/ux-guidelines.md) and keep their
+conformance checklist true.

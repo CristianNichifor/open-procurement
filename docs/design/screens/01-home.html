@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Achiziții publice din România — machetă</title><style>
+:root{--ink:#101418;--muted:#5c6672;--paper:#fff;--sub:#f4f6f8;--line:#dfe4e9;--accent:#123a6b;--accent-soft:#eef3fa;--warn:#b45309;--on-accent:#fff;--ok:#146c2e;--ok-soft:#e6f4ea;--warn-soft:#fdf3e7;--danger:#a32625;--danger-soft:#fbe9e9;
+--viz-1:#2a78d6;--viz-2:#eb6834;--viz-3:#1baf7a;--viz-4:#eda100;
+--s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.5rem;--s6:2rem;--s7:3rem;
+--t-xs:.8125rem;--t-sm:.875rem;--t-md:1rem;--t-lg:1.125rem;--t-xl:1.25rem;--t-2xl:1.5rem;--t-3xl:1.875rem;--radius:6px;
+--sans:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root{--ink:#e8ecf1;--muted:#95a1af;--paper:#0e1216;--sub:#161c23;--line:#252d36;--accent:#7ea9dd;--accent-soft:#16202c;--warn:#f0b429;--on-accent:#0e1216;--ok:#7fd69a;--ok-soft:#14261a;--warn-soft:#2a2111;--danger:#f5b8b7;--danger-soft:#2c1717;--viz-1:#3987e5;--viz-2:#d95926;--viz-3:#199e70;--viz-4:#c98500}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:var(--t-md)/1.5 var(--sans)}
+a{color:var(--accent)}
+.family{background:var(--sub);border-bottom:1px solid var(--line);font-size:var(--t-sm)}
+.family .in{max-width:1080px;margin:0 auto;padding:var(--s2) var(--s4);display:flex;align-items:center;gap:var(--s3);min-height:44px;flex-wrap:wrap}
+.family .home{text-decoration:none;font-weight:600;color:var(--ink);min-height:24px;display:inline-flex;align-items:center}
+.family .tool{color:var(--muted)}
+.family .lang{margin-left:auto;display:flex;gap:var(--s1)}
+.family .lang a{padding:var(--s1) var(--s2);min-height:24px;min-width:24px;border-radius:var(--radius);text-decoration:none}
+.family .lang a[aria-current]{background:var(--accent);color:var(--on-accent)}
+.badge{display:inline-flex;align-items:center;gap:.35rem;padding:.1rem .55rem;border-radius:999px;font-size:var(--t-xs);font-weight:600;border:1px solid transparent}
+.badge::before{content:"";width:.5rem;height:.5rem;border-radius:50%;background:currentColor}
+.badge.ok{color:var(--ok);background:var(--ok-soft)}
+.badge.demo{color:var(--warn);background:var(--warn-soft)}
+main{max-width:1080px;margin:0 auto;padding:var(--s5) var(--s4) var(--s7)}
+h1{font-size:var(--t-3xl);line-height:1.15;margin:0 0 var(--s1);letter-spacing:-.01em}
+h2{font-size:var(--t-xl);margin:var(--s6) 0 var(--s1)}
+h3{font-size:var(--t-lg);margin:var(--s5) 0 var(--s1)}
+.sub{margin:0;color:var(--muted)}
+.prov{margin:var(--s2) 0 var(--s5);font-size:var(--t-sm);color:var(--muted);display:flex;gap:var(--s2);flex-wrap:wrap;align-items:center}
+.prov .ro{font-size:var(--t-xs)}
+.hero{display:flex;gap:var(--s2);position:relative}
+.hero label{position:absolute;left:-9999px}
+.input{flex:1;font:inherit;font-size:var(--t-lg);padding:.7rem .9rem;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);color:var(--ink);min-height:44px}
+.btn{font:inherit;padding:.7rem 1.4rem;border:1px solid var(--accent);border-radius:var(--radius);background:var(--accent);color:var(--on-accent);min-height:44px;cursor:pointer}
+.btn.sec{background:var(--paper);color:var(--accent)}
+.btn.sm{padding:.35rem .7rem;font-size:var(--t-sm);min-height:32px}
+.btn:disabled{background:var(--sub);color:var(--muted);border-color:var(--line)}
+.hint{font-size:var(--t-sm);color:var(--muted);margin:var(--s2) 0 0}
+.sug{list-style:none;margin:var(--s1) 0 0;padding:var(--s1) 0;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);box-shadow:0 6px 18px rgba(0,0,0,.08);position:absolute;top:100%;left:0;right:0;z-index:2}
+.sug li{padding:var(--s2) var(--s3);display:flex;justify-content:space-between;gap:var(--s3);min-height:44px;align-items:center}
+.sug li[aria-selected]{background:var(--accent-soft)}
+.sug .k{color:var(--muted);font-size:var(--t-sm)}
+.sug .k code{font-family:var(--mono)}
+.sug mark{background:none;color:inherit;font-weight:700}
+.sug .foot{color:var(--muted);font-size:var(--t-xs);min-height:0;padding-top:var(--s1)}
+.banner{border-left:4px solid var(--warn);background:var(--sub);padding:var(--s3) var(--s4);margin:var(--s5) 0;font-size:var(--t-sm)}
+.banner summary{font-weight:700;cursor:pointer;min-height:24px}
+.banner p{margin:var(--s1) 0 0}
+.tabs{display:flex;gap:var(--s1);border-bottom:1px solid var(--line);margin:var(--s5) 0 var(--s4);overflow-x:auto;scrollbar-width:thin}
+.tabs a{padding:var(--s2) var(--s3);min-height:44px;display:inline-flex;align-items:center;white-space:nowrap;text-decoration:none;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs a[aria-current]{color:var(--accent);border-color:var(--accent);font-weight:600}
+.status{display:flex;align-items:center;gap:var(--s2);font-size:var(--t-sm);color:var(--muted);margin:var(--s3) 0}
+.status .spin{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;flex:none}
+.status .bar{flex:1;max-width:240px;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.status .bar i{display:block;height:100%;width:55%;background:var(--accent)}
+.msg{border-left:4px solid var(--line);background:var(--sub);padding:var(--s3) var(--s4);margin:var(--s3) 0;border-radius:0 var(--radius) var(--radius) 0}
+.msg.err{border-color:var(--danger)}.msg.warn{border-color:var(--warn)}.msg.info{border-color:var(--accent)}
+.msg b{display:block;margin-bottom:var(--s1)}
+.msg .act{margin-top:var(--s2);display:flex;gap:var(--s2);flex-wrap:wrap}
+.tbl{width:100%;border-collapse:collapse;font-size:var(--t-sm)}
+.tbl th{text-align:left;font-size:var(--t-xs);letter-spacing:.03em;text-transform:uppercase;color:var(--muted);background:var(--sub);padding:var(--s2) var(--s3);border-bottom:1px solid var(--line)}
+.tbl td{padding:var(--s2) var(--s3);border-bottom:1px solid var(--line);vertical-align:top}
+.tbl .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl th.n{text-align:right}
+.tbl tr.row a{text-decoration:none;color:var(--accent);font-weight:600}
+.tbl tr.row td:first-child::after{content:" →";color:var(--muted)}
+.thin{color:var(--muted)}.thin::after{content:" *";color:var(--warn);font-weight:700}
+.note{font-size:var(--t-xs);color:var(--muted);margin:var(--s2) 0}
+.wrap{overflow-x:auto}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3);margin:var(--s3) 0}
+.tile{border:1px solid var(--line);border-radius:var(--radius);padding:var(--s3) var(--s4);background:var(--paper)}
+.tile .l{font-size:var(--t-xs);text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+.tile .v{font-size:var(--t-2xl);font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
+.tile .u{font-size:var(--t-sm);color:var(--muted)}
+.tile .a{font-size:var(--t-xs);color:var(--muted);margin-top:var(--s1)}
+.frame{border:1px solid var(--line);border-radius:var(--radius);padding:var(--s4);margin:var(--s3) 0}
+.frame h3{margin:0 0 var(--s1)}
+.frame .q{margin:0 0 var(--s3);color:var(--muted);font-size:var(--t-sm)}
+.frame .src{font-size:var(--t-xs);color:var(--muted);margin-top:var(--s3);display:flex;justify-content:space-between;gap:var(--s3);flex-wrap:wrap}
+.bars{display:grid;gap:var(--s2);font-size:var(--t-sm)}
+.bars .r{display:grid;grid-template-columns:minmax(9rem,16rem) 1fr auto;gap:var(--s3);align-items:center}
+.bars .b{height:18px;border-radius:3px;background:var(--viz-1);min-width:2px}
+.bars .b.s2{background:var(--viz-2)}.bars .b.s3{background:var(--viz-3)}
+.bars .v{font-variant-numeric:tabular-nums;white-space:nowrap}
+.legend{display:flex;gap:var(--s4);font-size:var(--t-xs);color:var(--muted);margin:0 0 var(--s2);flex-wrap:wrap}
+.legend i{display:inline-block;width:.8rem;height:.8rem;border-radius:2px;vertical-align:-.1em;margin-right:.3rem}
+.range{position:relative;height:18px;background:var(--sub);border-radius:3px}
+.range i{position:absolute;top:0;height:100%;background:var(--accent-soft);border:1px solid var(--viz-1)}
+.range b{position:absolute;top:-2px;width:3px;height:22px;background:var(--viz-1)}
+details.sql{margin:var(--s4) 0}details.sql summary{min-height:24px;cursor:pointer;color:var(--muted);font-size:var(--t-sm)}
+pre{background:var(--sub);padding:var(--s3);border-radius:var(--radius);font:var(--t-xs)/1.5 var(--mono);overflow-x:auto}
+.share{display:flex;gap:var(--s2);flex-wrap:wrap;margin:var(--s4) 0}
+footer{border-top:1px solid var(--line);margin-top:var(--s6);padding:var(--s4);font-size:var(--t-xs);color:var(--muted)}
+footer .in{max-width:1080px;margin:0 auto;display:flex;gap:var(--s3);flex-wrap:wrap}
+.dl{display:grid;grid-template-columns:max-content 1fr;gap:var(--s1) var(--s4);font-size:var(--t-sm);margin:var(--s2) 0}
+.dl dt{color:var(--muted)}.dl dd{margin:0}
+.toc{font-size:var(--t-sm);columns:2;column-gap:var(--s5)}
+.sec{display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap;margin:var(--s3) 0}
+.sec label{font-size:var(--t-xs);color:var(--muted);display:block}
+.sel{font:inherit;font-size:var(--t-sm);padding:.45rem 1.8rem .45rem .6rem;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);color:var(--ink);min-height:36px}
+.states{margin-top:var(--s7);padding-top:var(--s4);border-top:2px dashed var(--line)}
+.states>h2{margin-top:0}.states .st{margin:var(--s4) 0}.states .st>em{font-size:var(--t-xs);color:var(--muted);display:block;margin-bottom:var(--s1)}
+.skip{position:absolute;left:-9999px}.skip:focus{left:var(--s4);top:var(--s2);background:var(--paper);padding:var(--s2);z-index:9}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.card{display:none}
+@media (max-width:640px){
+ .grid{grid-template-columns:1fr}.toc{columns:1}
+ .tbl.stack thead{position:absolute;left:-9999px}.tbl.stack tr{display:block;border-bottom:1px solid var(--line);padding:var(--s2) 0}
+ .tbl.stack td{display:flex;justify-content:space-between;gap:var(--s3);border:0;padding:.15rem var(--s2)}
+ .tbl.stack td::before{content:attr(data-l);color:var(--muted);font-size:var(--t-xs);text-transform:uppercase}
+ .tbl.stack td.n{text-align:right}
+ .tbl.price thead{position:absolute;left:-9999px}
+ .tbl.price tr{display:grid;grid-template-columns:1fr auto;grid-template-areas:"p n" "r r";border-bottom:1px solid var(--line);padding:var(--s2) var(--s1)}
+ .tbl.price td{border:0;padding:0}
+ .tbl.price td.p{grid-area:p;font-weight:600}.tbl.price td.p small{display:block;font-weight:400;color:var(--muted);font-size:var(--t-xs)}
+ .tbl.price td.cnt{grid-area:n;text-align:right}
+ .tbl.price td.r{grid-area:r;display:flex;gap:var(--s2);font-size:var(--t-xs);color:var(--muted);flex-wrap:wrap;margin-top:var(--s1)}
+ .tbl.price td.r b{color:var(--ink);font-size:var(--t-sm)}
+ .tbl.price td.hide{display:none}
+ .bars .r{grid-template-columns:1fr auto;grid-template-rows:auto auto}.bars .r .lbl{grid-column:1/-1}
+ h1{font-size:var(--t-2xl)}.hero{flex-wrap:wrap}.hero .btn{width:100%}
+ .family .tool{display:none}
+}
+@media (prefers-reduced-motion:no-preference){.status .spin{animation:r 1s linear infinite}@keyframes r{to{transform:rotate(360deg)}}}
+@media (forced-colors:active){.badge,.tile,.frame,.msg{border:1px solid CanvasText}.bars .b{border:1px solid CanvasText}}
+</style></head><body>
+<a class="skip" href="#main">Sari la conținut</a>
+<header class="family" role="banner"><div class="in">
+ <a class="home" href="https://projects.cristian-nichifor.com/">← Proiecte civice</a>
+ <span class="tool">Achiziții publice din România</span>
+ <span class="badge ok">Date reale</span>
+ <nav class="lang" aria-label="Limbă"><a href="#" aria-current="page" lang="ro">RO</a><a href="#" lang="en">EN</a></nav>
+</div></header>
+<main id="main">
+
+<h1>Achiziții publice din România</h1>
+<p class="sub">Ce a cumpărat o instituție, de la cine și cu cât — 26.672.753 de achiziții directe și 3,6 milioane de contracte, 2016–2026, interogate direct în browser.</p>
+<p class="prov"><span>Date: data.gov.ro, exporturile trimestriale ANAP/ADR, 2016–2026</span><span>·</span><span>prețuri colectate până la 06.09.2026</span><span>·</span><a href="#">Metodologie</a></p>
+<form class="hero" role="search"><label for="q">Caută o autoritate, o firmă, un CUI sau un produs</label>
+<input id="q" class="input" value="fund" aria-expanded="true" aria-controls="sug" autocomplete="off">
+<button class="btn" type="submit">Caută</button>
+<ul id="sug" class="sug" role="listbox" aria-label="Sugestii">
+ <li role="option" aria-selected="true"><span><mark>Fund</mark>eni — Institutul Clinic</span><span class="k">autoritate · CUI <code>4204003</code></span></li>
+ <li role="option"><span>Spitalul Clinic <mark>Fund</mark>eni</span><span class="k">autoritate · CUI <code>4316422</code></span></li>
+ <li role="option"><span><mark>Fund</mark>ația — —</span><span class="k">firmă · CUI <code>—</code></span></li>
+ <li class="foot">Enter deschide fișa · ↑↓ navighează · Esc închide. Persoanele fizice nu apar în sugestii.</li>
+</ul></form>
+<p class="hint">Sugestiile apar imediat, înainte ca motorul de interogare să fie gata. Căutarea de produs („hârtie A4”) duce la Prețuri unitare.</p>
+<details class="banner" open><summary>Cifrele arată tipare, nu concluzii.</summary><p>Un total mare sau o poziție dominantă a unui furnizor pot avea explicații perfect legale. Sumele sunt nominale, fără ajustare la inflație, dacă nu alegeți un an de referință. Vezi <a href="#">metodologia</a> și <a href="#">dreptul la replică</a>.</p></details>
+<nav class="tabs" aria-label="Vizualizări"><a href="#" aria-current="page">Panoramă</a><a href="#">Sumar</a><a href="#">După CPV</a><a href="#">Județe</a><a href="#">Contracte</a><a href="#">Entități</a><a href="#">Prețuri unitare</a><a href="#">Întâlniri (RUTI)</a><a href="#">Semnale (8)</a></nav>
+<p class="status"><span class="spin" aria-hidden="true"></span><span>Se descarcă motorul de interogare — 2,1 din 4 MB</span><span class="bar" aria-hidden="true"><i></i></span></p>
+<h2>Cât plătesc alții pentru același lucru</h2>
+<p class="sub">Grupurile de produse cu cea mai mare distanță între prețul mic și cel mare. O diferență mare nu înseamnă că cineva a greșit: cantitatea, condițiile și momentul livrării diferă.</p>
+<div class="wrap"><table class="tbl price"><thead><tr><th>Produs</th><th class="n">Achiziții</th><th class="n">De câte ori mai mare</th><th class="n">Percentila 10 (RON)</th><th class="n">Mediană (RON)</th><th class="n">Percentila 90 (RON)</th></tr></thead><tbody>
+<tr class="row"><td class="p"><a href="#">servicii de telecomunicații</a><small>pe lună</small></td><td class="n cnt thin">8</td><td class="n hide">12,6</td><td class="n hide">111,50</td><td class="n hide"><b>211,25</b></td><td class="n hide">1.402,02</td><td class="r">mediana <b>211,25 RON</b> · 80% între 111,50 și 1.402,02 · de 12,6 ori</td></tr>
+<tr class="row"><td class="p"><a href="#">materiale electrice</a><small>pe bucată</small></td><td class="n cnt thin">9</td><td class="n hide">8,3</td><td class="n hide">212,79</td><td class="n hide"><b>419,41</b></td><td class="n hide">1.760,98</td><td class="r">mediana <b>419,41 RON</b> · 80% între 212,79 și 1.760,98 · de 8,3 ori</td></tr>
+<tr class="row"><td class="p"><a href="#">servicii de deratizare</a><small>pe m²</small></td><td class="n cnt">15</td><td class="n hide">7,4</td><td class="n hide">0,19</td><td class="n hide"><b>0,40</b></td><td class="n hide">1,40</td><td class="r">mediana <b>0,40 RON</b> · 80% între 0,19 și 1,40 · de 7,4 ori</td></tr>
+<tr class="row"><td class="p"><a href="#">produse alimentare</a><small>pe bucată</small></td><td class="n cnt">23</td><td class="n hide">6,2</td><td class="n hide">242,90</td><td class="n hide"><b>608,65</b></td><td class="n hide">1.501,12</td><td class="r">mediana <b>608,65 RON</b> · 80% între 242,90 și 1.501,12 · de 6,2 ori</td></tr>
+</tbody></table></div>
+<p class="note">* sub 10 achiziții: eșantion subțire, mediana este orientativă. <a href="#">Toate cele 44.730 de linii de preț →</a></p>
+<h2>Ce merită verificat — 8 semnale</h2>
+<p class="sub">Fiecare semnal are un temei legal citat și înseamnă „merită o privire”, niciodată „este ilegal”.</p>
+<div class="frame"><div class="legend"><span><i style="background:var(--viz-1)"></i>contracte semnalate (număr)</span></div>
+<div class="bars">
+<div class="r"><span class="lbl"><a href="#">Valoare atribuită egală sau peste valoarea estimată</a></span><span class="b" style="width:100%"></span><span class="v">42.631</span></div>
+<div class="r"><span class="lbl"><a href="#">Contract atribuit după primirea unei singure oferte</a></span><span class="b" style="width:87%"></span><span class="v">36.989</span></div>
+<div class="r"><span class="lbl"><a href="#">Concentrare a valorilor imediat sub plafonul achiziției directe</a></span><span class="b" style="width:44%"></span><span class="v">18.658</span></div>
+<div class="r"><span class="lbl"><a href="#">Atribuire fără publicarea prealabilă a unui anunț</a></span><span class="b" style="width:24%"></span><span class="v">10.298</span></div>
+<div class="r"><span class="lbl"><a href="#">Creștere a valorii contractului după semnare</a></span><span class="b" style="width:7%"></span><span class="v">2.896</span></div>
+<div class="r"><span class="lbl"><a href="#">Achiziție de la un operator radiat sau în lichidare</a></span><span class="b" style="width:1.7%"></span><span class="v">713</span></div>
+<div class="r"><span class="lbl"><a href="#">Achiziții repetate, același obiect și furnizor, interval scurt</a></span><span class="b" style="width:.9%"></span><span class="v">399</span></div>
+<div class="r"><span class="lbl"><a href="#">Concentrare a bugetului de achiziții directe către un singur furnizor</a></span><span class="b" style="width:.1%"></span><span class="v">33</span></div>
+</div><div class="src"><span>Sursă: data.gov.ro, ANAP/ADR · contracte 2016–2026</span><a href="#">Afișează ca tabel</a></div></div>
+<h2>Cine cheltuie cel mai mult</h2>
+<p class="sub">Instituțiile cu cea mai mare valoare de achiziții directe. A cheltui mult nu este un indiciu în sine.</p>
+<div class="wrap"><table class="tbl stack"><thead><tr><th>Autoritate contractantă</th><th>CUI</th><th class="n">Achiziții</th><th class="n">Valoare totală (RON)</th></tr></thead><tbody>
+<tr class="row"><td data-l="Autoritate"><a href="#">Regia Națională a Pădurilor — Romsilva RA</a></td><td data-l="CUI"><code>1590120</code></td><td class="n" data-l="Achiziții">29.236</td><td class="n" data-l="Valoare">501,3 mil.</td></tr>
+<tr class="row"><td data-l="Autoritate"><a href="#">Institutul Clinic Fundeni</a></td><td data-l="CUI"><code>4204003</code></td><td class="n" data-l="Achiziții">28.802</td><td class="n" data-l="Valoare">420,2 mil.</td></tr>
+<tr class="row"><td data-l="Autoritate"><a href="#">SC RAJA SA Constanța</a></td><td data-l="CUI"><code>1890420</code></td><td class="n" data-l="Achiziții">69.831</td><td class="n" data-l="Valoare">418,9 mil.</td></tr>
+<tr class="row"><td data-l="Autoritate"><a href="#">Apavital SA Iași</a></td><td data-l="CUI"><code>1959768</code></td><td class="n" data-l="Achiziții">28.986</td><td class="n" data-l="Valoare">284,4 mil.</td></tr>
+</tbody></table></div>
+<h2>Ce acoperă datele</h2>
+<div class="grid">
+<div class="tile"><div class="l">Achiziții directe</div><div class="v">26.672.753</div><div class="a">2016–2026, exporturile publice ANAP/ADR</div></div>
+<div class="tile"><div class="l">Prețuri unitare</div><div class="v">44.730 <span class="u">linii</span></div><div class="a">colectate 01.07.2026 → 06.09.2026; arhiva crește doar înainte</div></div>
+<div class="tile"><div class="l">Întâlniri (RUTI)</div><div class="v">669</div><div class="a">13.10.2025 → 11.09.2026, 98 cu concluzii publicate</div></div>
+</div>
+
+<div class="share"><button class="btn sec sm">Copiază linkul acestei vizualizări</button><button class="btn sec sm">Descarcă CSV</button></div>
+<details class="sql"><summary>Interogarea SQL folosită</summary><pre>— SQL-ul generat pentru această vizualizare —</pre></details>
+<section class="states" aria-label="Stări"><h2>Stări (pentru implementare)</h2>
+<div class="st"><em>Încărcare în trepte (peste 2 s): mai întâi descărcarea, apoi pornirea motorului; o căutare tastată între timp este pusă la coadă.</em>
+<p class="status"><span class="spin" aria-hidden="true"></span>Se descarcă motorul de interogare — 2,1 din 4 MB<span class="bar" aria-hidden="true"><i></i></span></p>
+<p class="status"><span class="spin" aria-hidden="true"></span>Se pornește motorul… Căutarea „fundeni” va rula imediat ce este gata.</p></div>
+<div class="st"><em>Gol</em><div class="msg info"><b>Niciun rezultat pentru „xyzq”.</b>Verificați ortografia sau căutați după CUI. Persoanele fizice nu apar niciodată în căutare.<div class="act"><button class="btn sec sm">Caută în toate entitățile</button></div></div></div>
+<div class="st"><em>Eroare cu reîncercare (D-4)</em><div class="msg err"><b>Motorul de interogare nu a putut fi descărcat de la cdn.jsdelivr.net.</b>Panorama de mai sus este completă; căutarea și tabelele au nevoie de motor.<div class="act"><button class="btn sm">Reîncearcă</button><a class="btn sec sm" href="#">Descarcă datele brute</a></div></div></div>
+<div class="st"><em>Date vechi (colectarea SEAP este oprită): insigna rămâne „Date reale”, linia de proveniență spune vechimea.</em><p class="prov"><span>Date: data.gov.ro, ANAP/ADR</span><span>·</span><span class="badge demo">cele mai noi prețuri au 38 de zile</span></p></div>
+</section>
+</main>
+<footer role="contentinfo"><div class="in"><span>Date: data.gov.ro, exporturile trimestriale ANAP/ADR · CC BY 4.0</span><a href="#">Metodologie</a><a href="#">Dreptul la replică</a><a href="#">Confidențialitate</a><a href="#">Cod sursă</a><a href="#">Contact</a></div></footer>
+<!-- Figures copied from the live front page on 2026-10-14; '—' marks placeholders. -->
+</body></html>
