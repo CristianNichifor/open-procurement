@@ -92,6 +92,79 @@ schemes). The scan found no serious or critical violations, so nothing needed fi
 
 Test: review only (documentation).
 
+## Theme C: first-visit experience (UX review of the live site, 2026-10-14)
+
+Measured on the live site: "Caută" stayed disabled for ~29 s on a cold load, a search for
+"Fundeni" took 49 s with only "Se interoghează…" on screen.
+
+### UX-1 The engine starts at once and a search can be queued (todo)
+
+- Given a cold load, when the page starts, then the engine download is requested before
+  the front-door JSON, not after it.
+- Given the engine is still loading, when the reader types a search and presses Caută or
+  Enter, then the button is already enabled, the status says the search will run as soon
+  as the engine is ready, and it does run then, landing on the entity file.
+- Given the engine is downloading, then the status shows staged progress with megabytes
+  ("Motor: 2,1 / 4 MB"), and a query that runs long shows how long it has been running.
+
+Tests: `tests/browser/ux.spec.js` (queued search with a delayed wasm, request order),
+`tests/test_site_boot.py`.
+
+### UX-2 A tab change never shows the previous table (todo)
+
+- Given a results table on screen, when another table view is selected, then in the same
+  task the old rows are replaced by skeleton rows, and the old chart is cleared.
+
+Test: `tests/browser/ux.spec.js`.
+
+### UX-3 Codes are shown as words (todo)
+
+- Given the contracts view, then `natura` reads "contract subsecvent", "plafon
+  acord-cadru", not `contract_subsecvent`, `plafon_acord_cadru`.
+- Given a signal table, then the `indicator` column shows the signal's name from the
+  manifest, not its id (`dependenta-01`). CSV exports keep the raw codes.
+
+Test: `tests/browser/ux.spec.js`.
+
+### UX-4 Clickable rows look clickable (todo)
+
+- Given a row that opens something (`tr.drillable`), then its last cell shows a visible
+  "Fișă →" (organisations) or "Detalii →" (price groups) cue.
+
+Test: `tests/browser/ux.spec.js`.
+
+### UX-5 The phone tab bar shows that it scrolls (todo)
+
+- Given a 390 px screen, when the tab bar overflows, then its edge fades, it snaps to tabs,
+  and the selected tab is scrolled into view.
+
+Test: `tests/browser/ux.spec.js`.
+
+### UX-6 The front-door signal list has no stray bullets (todo)
+
+- Given the front door, then `.pan ul.legend` has no list bullets, so wrapped lines align.
+
+Test: `tests/browser/ux.spec.js`.
+
+### UX-7 Thin price groups are marked (todo)
+
+- Given a front-door price row with n < 10, then its spread ratio is greyed and a note
+  explains that the ratio rests on fewer than 10 prices.
+
+Test: `tests/browser/ux.spec.js`.
+
+### UX-8 The data says how recent it is (todo)
+
+- Given the manifest's latest `pana_la`, then the header and the footer show "date până
+  la <data>".
+
+Test: `tests/browser/ux.spec.js`.
+
+### Not done in this theme
+
+- Prebuilt entity-name typeahead that works before the engine loads, and two-line mobile
+  price rows with a p10–p90 bar: larger changes, left for a later theme.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.
