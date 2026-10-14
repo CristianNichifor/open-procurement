@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-k611o3l73jn9zEftsPGcIiu1QM4sI/YGiRsIx0xp4Dk=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-hRnAPTGR6XU6gLVPJdAf4F+59N2Vydlya+1Jx328G+Q=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -414,6 +414,28 @@
     /* Eleven "2016"s do not fit across 320px. Counted from the END so the most recent
        year is always the one kept. */
     .viz .xrow span:nth-last-child(even) { visibility:hidden; }
+  }
+  .tbl td.interval { display:none; }
+  /* A price group on a phone: product and median, then the p10–p90 range as a bar. The
+     card above gave it seven labelled lines, so six groups filled two screens. */
+  @media (max-width: 480px) {
+    .tbl tr.pret { display:grid; grid-template-columns:minmax(0,1fr) auto;
+                   column-gap:.8rem; padding:.45rem .1rem; }
+    .tbl tr.pret td { display:none; }
+    .tbl tr.pret td::before { content:none; }
+    .tbl tr.pret td.c-produs { display:block; grid-column:1; grid-row:1; text-align:left;
+                               font-weight:600; overflow-wrap:anywhere; }
+    .tbl tr.pret td.c-mediana { display:block; grid-column:2; grid-row:1; }
+    .tbl tr.pret td.c-mediana::before { content:'mediana '; font-size:.7rem; }
+    .tbl tr.pret td.interval { display:flex; align-items:center; gap:.4rem; grid-column:1;
+                               grid-row:2; font-size:.8rem; color:var(--muted);
+                               white-space:nowrap; text-align:left; }
+    .tbl tr.pret td.cta { display:block; grid-column:2; grid-row:2; }
+    .interval .bara { position:relative; flex:1; min-width:3rem; height:.45rem;
+                      border-radius:.25rem; background:var(--accent-soft);
+                      border:1px solid var(--accent); }
+    .interval .bara i { position:absolute; top:-.2rem; width:2px; height:.85rem;
+                        margin-left:-1px; background:var(--accent); }
   }
 </style>
 <link rel="stylesheet" href="civic-host.css">
@@ -1683,13 +1705,16 @@ function fillTable(el, table, {
   // Sliced, because the query deliberately fetches one row more than the page shows —
   // that extra row is how the pager knows there is a next page, and it must never be
   // drawn.
+  // A price group: on a phone it is drawn as two lines instead of a card (see the CSS).
+  const pret = ['denumire_key', 'mediana_ron', 'p10_ron', 'p90_ron'].every((c) => cols.includes(c));
   for (const row of table.toArray().slice(0, maxRows)) {
     const tr = body.insertRow();
+    if (pret) tr.classList.add('pret');
     // A row is clickable when the caller says what clicking it does — a price group
     // opens its acquisitions, a search result opens that organisation's file.
     const act = onRow ? onRow(row) : null;
     if (act) {
-      tr.className = 'drillable';
+      tr.classList.add('drillable');
       tr.tabIndex = 0;
       tr.title = act.title;
       tr.onclick = act.open;
@@ -1719,6 +1744,9 @@ function fillTable(el, table, {
         : numeric && !isLabel && money(c) ? ron(v)
         : numeric && !isLabel ? Number(v).toLocaleString('ro-RO') : valueLabel(c, String(v));
       if (numeric) td.className = 'num';
+      if (pret && (c === 'denumire_key' || c === 'mediana_ron')) {
+        td.classList.add(c === 'denumire_key' ? 'c-produs' : 'c-mediana');
+      }
       const extra = cellClass ? cellClass(row, c) : null;
       if (extra) td.classList.add(extra);
       if (numeric && !isLabel && money(c) && v !== null && v !== undefined) {
@@ -1727,6 +1755,7 @@ function fillTable(el, table, {
         td.title = `${Number(v).toLocaleString('ro-RO')} RON`;
       }
     }
+    if (pret) tr.append(intervalCell(row));
     // A pointer cursor is invisible on a phone and hover never happens there, so a row
     // that opens something said so to nobody. The cue is text, in the row itself.
     if (onRow) {
@@ -1737,6 +1766,36 @@ function fillTable(el, table, {
     }
   }
   return Math.min(table.numRows, maxRows);
+}
+
+// The p10–p90 range of a price group as a bar with the median marked on it. Only shown
+// on a phone, where it replaces the three percentile lines of the card; on a wider screen
+// the columns already say the same thing and the cell is hidden.
+function intervalCell(row) {
+  const td = document.createElement('td');
+  td.className = 'interval';
+  const p10 = Number(row.p10_ron), med = Number(row.mediana_ron), p90 = Number(row.p90_ron);
+  const ok = [p10, med, p90].every(Number.isFinite) && p90 > p10;
+  const bara = document.createElement('span');
+  bara.className = 'bara';
+  bara.setAttribute('aria-hidden', 'true');
+  if (ok) {
+    const m = document.createElement('i');
+    m.style.left = `${Math.min(100, Math.max(0, ((med - p10) / (p90 - p10)) * 100))}%`;
+    bara.append(m);
+  }
+  const lo = document.createElement('span'), hi = document.createElement('span');
+  lo.textContent = Number.isFinite(p10) ? ron(p10) : '—';
+  hi.textContent = Number.isFinite(p90) ? ron(p90) : '—';
+  const sr = document.createElement('span');
+  sr.className = 'sr-only';
+  sr.textContent = '80% dintre prețuri între ';
+  const si = document.createElement('span');
+  si.className = 'sr-only';
+  si.textContent = ' și ';
+  td.append(sr, lo, si, bara, hi);
+  td.title = 'percentila 10 – percentila 90';
+  return td;
 }
 
 // fillTable() and chartFor() read Arrow tables. The front door's rows now arrive as plain
