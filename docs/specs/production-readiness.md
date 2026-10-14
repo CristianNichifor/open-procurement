@@ -397,6 +397,15 @@ agent-written: **needs human review**.
 
 Test: `tests/test_site_entity_head.py`; browser suite in CI.
 
+
+### OP-28 Entity figures say their years and nominal lei (done)
+
+- Given an entity file, then the „A cumpărat” and „A vândut” figures each add the span of
+  years their rows cover („2016–2026”, or one year) and that the sums are „lei nominali”,
+  as the tiles in design screen 02 do; a side with no rows adds no period.
+
+Test: `tests/test_site_entity_facts.py`.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.
