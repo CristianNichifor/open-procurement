@@ -17,8 +17,10 @@ fixture scope and browser checks. npm installs browser tooling, not the Python p
 
 ## Review and CI
 
-`dev` is the contribution base; `main` is production. Agents must never merge
-pull requests or deploy, even when their credentials permit it. Open a PR to `dev`.
+`dev` is the contribution base; `main` is production. Open a PR to `dev`. Agents
+may squash-merge it once verification passes and every required check is green;
+they never merge into `main`, promote `dev` to `main`, bypass rules or deploy, even
+when their credentials permit it. Promotion and public visibility stay with the owner.
 The aggregate `verify` job requires every correctness dependency to succeed;
 skipped, cancelled and failed jobs fail the gate. Repository rules are managed
 separately; the presence of this workflow does not itself enforce branch protection.

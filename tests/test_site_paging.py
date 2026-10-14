@@ -114,7 +114,9 @@ def test_the_dead_end_message_is_gone(source: str) -> None:
     # and should: it is a section of a file that does not paginate, and saying a ceiling
     # is a ceiling is the honest thing there. What had to go is the version that appeared
     # on a view where turning the page was the obvious next move and there was none.
-    body = _body(source, "function render(table) {", 3000)
+    # 3500: the empty-result branch grew a „Toți anii” button (OP-20) and the message
+    # moved past the old 3000-character window.
+    body = _body(source, "function render(table) {", 3500)
     assert "(limitat la 200)" not in body
     assert "Rândurile ${from.toLocaleString('ro-RO')}" in body
 

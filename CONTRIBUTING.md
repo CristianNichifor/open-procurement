@@ -38,6 +38,12 @@ job once alongside lint, full pytest and the repository-size check. The aggregat
 `verify` requires both jobs to succeed, including on fork PRs; skipped or cancelled
 jobs fail. The offline subset does not claim released-data or browser coverage.
 
+`site/metodologie.html`, `site/replica.html` and `site/privacy.html` are rendered from
+`METHODOLOGY.md`, `CORRECTIONS.md` and `docs/site/`. After editing any of them run
+`.venv/bin/python scripts/build_pages.py` and commit the result; a test fails otherwise.
+The same script updates the script hash in the front page's Content-Security-Policy, so
+run it after any change to the inline script in `site/index.html` too.
+
 ## Changes and review
 
 Start from current `origin/dev`. Maintainers use `wt new <name> origin/dev` in
@@ -52,7 +58,8 @@ success. Add a small regression fixture for changed behavior, including provenan
 for real source excerpts; disclose untested paths and data coverage limits.
 Use Conventional Commits with an imperative lower-case subject, no trailing period,
 and at most 72 characters. Link issues with `Refs: #N` or `Closes: #N` trailers.
-Open PRs against `dev`; agents never merge or deploy. Keep the existing license.
+Open PRs against `dev`; agents may squash-merge into `dev` once every required
+check is green, but never merge into `main` or deploy. Keep the existing license.
 
 No private handbook, 1Password, production credentials, or production collection is
 needed for contributor verification. Publishing and collection are maintainer tasks,
@@ -125,3 +132,5 @@ wrong. Corrections are fixed **in the pipeline**, so they survive rebuilds.
    statistical position — never wrongdoing. See `METHODOLOGY.md`.
 
 For shared-control changes, preserve the [native Civic UI contract](docs/CIVIC_UI.md).
+For any page change, follow the [UX guidelines](docs/ux-guidelines.md) and keep their
+conformance checklist true.

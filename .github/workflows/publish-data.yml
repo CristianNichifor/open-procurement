@@ -82,8 +82,8 @@ jobs:
 
       # The bundle is a release asset rather than a committed tree, and several tests read it
       # directly — test_price_drilldown opens site/data/manifest.json unconditionally, which is
-      # the point: it used to carry a skipif that turned into a pass. pages.yml, tests.yml and
-      # browser.yml each fetch it before running; this workflow also runs pytest and did not,
+      # the point: it used to carry a skipif that turned into a pass. deploy-pages-cloudflare.yml,
+      # tests.yml and browser.yml each fetch it before running; this workflow also runs pytest and did not,
       # so the first scheduled run after that change failed here, on 2026-09-11.
       #
       # It matters more here than the failure suggests. `Test` runs before `Ingest`, so a job
@@ -269,6 +269,12 @@ jobs:
             # Needs "Allow GitHub Actions to create and approve pull requests" in the repository
             # settings. The branch is pushed either way, so the day is not lost.
             echo "::warning::could not open the pull request; open it from $BRANCH by hand: ${{ github.server_url }}/${{ github.repository }}/compare/dev...$BRANCH"
+          fi
+          # A pull request this token opened gets no `pull_request` run, so `verify` (which
+          # dev requires) would never report. A dispatch is the one event the token may
+          # raise; it puts the same checks on the branch's head commit.
+          if ! gh workflow run tests.yml --ref "$BRANCH"; then
+            echo "::warning::could not start tests.yml on $BRANCH; run it by hand so the pull request can merge"
           fi
 
       - name: Save the authority cache

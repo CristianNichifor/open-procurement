@@ -1,13 +1,23 @@
 name: deploy-pages-cloudflare
 
-# Publishes site/ to Cloudflare Pages (CN Webify Customers), laid out like GitHub Pages so the
-# projects hub proxies /open-procurement/ 1:1. main is public behind
+# Publishes site/ to Cloudflare Pages (CN Webify Customers), staged under /open-procurement/ so
+# the projects hub proxies that path 1:1. main is public behind
 # projects.cristian-nichifor.com/open-procurement/; dev is the protected preview behind
 # projects-dev.cristian-nichifor.com, reached only through the CN Webify preview gate (ADR-022),
 # which functions/_middleware.js enforces on every preview deployment.
 #
 # No secrets: a one-hour Cloudflare token comes from the CN Webify token broker, which accepts this
-# exact file on main and dev. pages.yml keeps publishing to GitHub Pages until the hub switches.
+# exact file on main and dev. The old GitHub Pages address only redirects here (pages.yml).
+#
+# The bundle under site/data is NOT built here. data.gov.ro is unreachable from GitHub and Azure
+# IP ranges (four 60-second connect timeouts against 0.93s from a local machine), which is also
+# why bulk.yml has no schedule, so it is generated locally with `achizitii publish`. See
+# docs/sources.md.
+#
+# Nor is it committed: git keeps every version of a file forever, and three regenerated rollups
+# once accounted for 271 MB of a 302 MB pack (measured 2026-09-10). It is published as a
+# `bundle-*` release asset and fetched below, so ordinary reads hit Pages and never touch R2.
+# See docs/storage.md.
 
 on:
   push:
@@ -31,12 +41,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The bundle is a release asset, not in git (pages.yml explains why).
+      # The bundle is a release asset, not in git (see the header).
       - name: Fetch the bundle
         env:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/fetch_bundle.sh
 
+      # Deploying an empty shell is worse than not deploying: the page would load, report a
+      # missing manifest, and look like a site that is merely broken.
       - name: Verify the bundle is present
         run: |
           if [ ! -f site/data/manifest.json ]; then
@@ -58,7 +70,7 @@ jobs:
               sys.exit(f"::error::files over the 25 MiB Pages limit: {big}")
           PY
 
-      # Served under /open-procurement/, as on GitHub Pages; the root redirects there.
+      # Served under /open-procurement/, the path the hub proxies; the root redirects there.
       - name: Stage the site under its path
         run: |
           mkdir -p _site/open-procurement

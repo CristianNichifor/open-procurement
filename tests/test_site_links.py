@@ -7,8 +7,8 @@ Back left the site instead of returning to the previous view. For a page whose s
 purpose is letting other people check the figures, an uncitable figure is barely
 published at all.
 
-State now lives in the hash. Not the query string: this is served as static files from
-GitHub Pages, where a path or query the server has never heard of returns 404, while
+State now lives in the hash. Not the query string: this is served as static files with
+no router, where a path or query the server has never heard of is not this page, while
 everything after "#" never reaches a server.
 
 Source assertions, like the other site tests. The behaviour was verified in a real
@@ -43,7 +43,7 @@ def _body(source: str, decl: str, chars: int = 2000) -> str:
 
 
 def test_state_is_carried_in_the_hash_not_the_path(source: str) -> None:
-    """GitHub Pages has no router. A path or query it does not recognise is a 404, so a
+    """Static hosting has no router. A path or query it does not recognise is a 404, so a
     shared link has to survive without the server understanding any of it."""
     assert "function applyHash(" in source
     assert "location.hash" in source
@@ -160,3 +160,77 @@ def test_the_reader_is_told_the_link_exists(source: str) -> None:
         "clipboard needs a secure context; serving the folder over plain HTTP locally "
         "must say where the link is rather than fail silently"
     )
+
+
+# --- Pages a reader can reach without leaving the site -------------------------------
+#
+# The caveat sent readers to GitHub's file viewer for the methodology and the right of
+# reply: a different site, an English-only code-hosting interface, and a link that breaks
+# the day a file is renamed. And nothing at all said what the site does with visitors.
+
+SITE = Path("site")
+ISSUES = "https://github.com/CristianNichifor/open-procurement/issues"
+STATIC_PAGES = ("privacy.html", "metodologie.html", "replica.html")
+
+
+def test_no_page_links_into_the_github_file_viewer() -> None:
+    import re
+
+    offenders = [
+        str(p) for p in SITE.rglob("*.html")
+        if "vendor" not in p.parts
+        and re.search(r"github\.com/[^\s\"']*/blob/", p.read_text(encoding="utf-8"))
+    ]
+    assert not offenders, f"link the same-origin page instead: {offenders}"
+
+
+def test_the_caveat_links_to_pages_on_this_site(source: str) -> None:
+    caveat = source.split('id="banner"')[1].split("</details>")[0]
+    assert 'href="metodologie.html"' in caveat
+    assert 'href="replica.html"' in caveat
+
+
+def test_the_footer_links_the_privacy_page(source: str) -> None:
+    footer = source.split("<footer>")[1].split("</footer>")[0]
+    assert 'href="privacy.html"' in footer
+
+
+@pytest.mark.parametrize("page", STATIC_PAGES)
+def test_every_static_page_exists_in_both_languages(page: str) -> None:
+    html = (SITE / page).read_text(encoding="utf-8")
+    assert '<html lang="ro">' in html
+    assert 'data-lang="ro"' in html and 'data-lang="en"' in html
+    assert 'data-set-lang="en"' in html, "the RO/EN toggle is missing"
+    assert '<script src="lang.js" defer></script>' in html
+    assert 'href="./"' in html, "a way back to the data"
+    assert 'href="privacy.html"' in html
+
+
+def test_the_privacy_page_states_what_the_code_shows() -> None:
+    html = (SITE / "privacy.html").read_text(encoding="utf-8")
+    ro = html.split('<article data-lang="ro"')[1].split('<article data-lang="en"')[0]
+    en = html.split('<article data-lang="en"')[1]
+    for needle in ("cookie", "Cloudflare Pages", "GitHub Pages", "cdn.jsdelivr.net",
+                   "extensions.duckdb.org", "Cristian Nichifor", ISSUES):
+        assert needle in ro, f"RO text lacks {needle!r}"
+        assert needle in en, f"EN text lacks {needle!r}"
+    assert "analytics" in en.lower() and "analiză" in ro.lower()
+    assert "ş" not in html and "ţ" not in html, "comma-below ș ț, never the cedilla forms"
+
+
+def test_the_no_cookies_claim_stays_true() -> None:
+    """The privacy page says no cookies and no analytics. That is only true while no
+    page on the site writes a cookie, uses storage, or loads a measurement script."""
+    for p in SITE.rglob("*.html"):
+        if "vendor" in p.parts:
+            continue
+        text = p.read_text(encoding="utf-8")
+        for needle in ("document.cookie", "localStorage", "sessionStorage",
+                       "googletagmanager", "google-analytics", "plausible.io", "matomo."):
+            assert needle not in text, f"{p} uses {needle}; update privacy.html first"
+
+
+def test_the_footer_links_method_and_contact(source: str) -> None:
+    footer = source.split("<footer>")[1].split("</footer>")[0]
+    assert 'href="metodologie.html"' in footer
+    assert "open-procurement/issues" in footer

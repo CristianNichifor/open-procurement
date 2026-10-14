@@ -1,8 +1,8 @@
-"""Build the browser-queryable bundle served from GitHub Pages.
+"""Build the browser-queryable bundle served from Cloudflare Pages.
 
-The archive is 1.5 GB of Parquet, 95.6% of it direct acquisitions. GitHub Pages caps a
-site at 1 GB, so the raw rows cannot be published there — and should not be, because a
-browser has no use for 26.7 million rows it must download before answering anything.
+The archive is 1.5 GB of Parquet, 95.6% of it direct acquisitions. That is too much to
+serve as static files, so the raw rows are not published with the site — and should not be,
+because a browser has no use for 26.7 million rows it must download before answering anything.
 
 What a reader actually asks is aggregate: how much did this authority spend, who did it
 buy from, what does this CPV usually cost, which acquisitions cluster under the ceiling.
@@ -35,6 +35,7 @@ import duckdb
 from .config import ROOT
 from .deflator import deflator_rows
 from .deflator import source as ipc_source
+from .entitati import write_index
 from .indicators import INDICATORS_BY_ID, threshold_for
 
 log = logging.getLogger(__name__)
@@ -983,6 +984,13 @@ def build(out_dir: Path | None = None, *, only: str | None = None) -> dict[str, 
         manifest.pop("panorama", None)
     for stale in pan_names:
         (out / f"{stale}.parquet").unlink(missing_ok=True)
+
+    # The search box's suggestions, for the same reason: they work before the engine loads.
+    ent = write_index(out)
+    if ent:
+        manifest["entitati"] = ent
+    else:
+        manifest.pop("entitati", None)
 
     # Coverage and the exclusion count, so a reader can see what was left out. The
     # `ad` view only exists when the bulk archive was registered; in prices-only mode

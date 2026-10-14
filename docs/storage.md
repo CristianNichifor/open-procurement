@@ -2,10 +2,10 @@
 
 | Layer | Home | Why |
 |---|---|---|
-| The site | GitHub Pages | Static, cached, cannot go down. Loads even if everything below is broken. |
-| Aggregates (~20 MB) | GitHub Pages, from a release asset | Small, and the common case should never depend on an external service. Delivered by release rather than by git — see below. |
-| Collected daily prices | GitHub Pages, from git | Written once, never rewritten, and the only copy that exists. Versioned on purpose. |
-| Line items (to 2.3 GB) | Cloudflare R2 — **planned, not live** | Exceeds the 1 GB Pages cap, and git keeps every version of a file forever. See below for what exists today. |
+| The site | Cloudflare Pages | Static, cached, cannot go down. Loads even if everything below is broken. |
+| Aggregates (~20 MB) | Cloudflare Pages, from a release asset | Small, and the common case should never depend on an external service. Delivered by release rather than by git — see below. |
+| Collected daily prices | Cloudflare Pages, from git | Written once, never rewritten, and the only copy that exists. Versioned on purpose. |
+| Line items (to 2.3 GB) | Cloudflare R2 — **planned, not live** | Too large for static hosting, and git keeps every version of a file forever. See below for what exists today. |
 | Raw SEAP JSON | Cloudflare R2 | Kept so a mapping fix never means re-downloading. Not currently retained — see below. |
 | Bulk gov Parquet (12 GB) | Local only | Rebuilt from data.gov.ro, which is unreachable from GitHub runners. |
 
@@ -57,7 +57,7 @@ build:
 2. `scripts/release_bundle.sh` uploads it as a `bundle-<date>` release asset — everything
    under `site/data` **except** `site/data/preturi/**`.
 3. `scripts/fetch_bundle.sh` downloads the newest `bundle-*` release when `site/data` is not
-   already present. Both `pages.yml` and `tests.yml` call it.
+   already present. `deploy-pages-cloudflare.yml`, `tests.yml` and `browser.yml` call it.
 
 **The tests fetch it too, and that is the point.** A dozen tests assert things about the
 bundle; `test_price_drilldown` reads the manifest unconditionally and several others carry a
