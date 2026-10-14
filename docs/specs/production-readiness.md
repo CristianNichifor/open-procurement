@@ -240,7 +240,7 @@ Test: `tests/test_ux_guidelines.py`, `tests/test_site_links.py`.
   review.
 
 Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it again".
-### OP-12 Design screens for the five main views (done)
+### OP-14 Design screens for the five main views (done)
 
 - Given `docs/design/screens/`, when it is read, then it holds self-contained HTML
   mockups for the home (search-first, typeahead), entity file, unit prices (desktop and
