@@ -25,6 +25,7 @@ def test_signals_are_a_table_with_bars_and_a_legend() -> None:
     assert "semnal-bar" in block, "no bar per row"
     assert "legend" in block and "Lungimea barei" in block, "no legend saying what the bar is"
     assert "selectTab('indicatori', ind)" in block, "rows must still open the signal"
+    assert "'Temei legal'" in block and "ind.temei" in block, "every row carries its legal basis"
 
 
 def test_bar_width_is_proportional_to_the_count() -> None:

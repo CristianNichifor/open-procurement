@@ -250,8 +250,9 @@ Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_
 ### OP-19 Signals as labelled bars, same rows as a table (done)
 
 - Given the front door's „Ce merită verificat” block, then the signals are one table:
-  the signal (a button that opens it), its count, and a bar whose width is the count
-  relative to the largest; a legend line under it says what the bar measures.
+  the signal (a button that opens it), its legal basis (design screen 04; a dash when
+  the manifest carries none), its count, and a bar whose width is the count relative to
+  the largest; a legend line under it says what the bar measures.
 
 Test: `tests/test_site_signals.py`; `tests/browser/ux.spec.js` (front door) in CI.
 Romanian legend text is agent-written: **needs human review**.
