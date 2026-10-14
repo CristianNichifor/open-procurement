@@ -240,6 +240,21 @@ Test: `tests/test_ux_guidelines.py`, `tests/test_site_links.py`.
   review.
 
 Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it again".
+### OP-14 Design screens for the five main views (done)
+
+- Given `docs/design/screens/`, when it is read, then it holds self-contained HTML
+  mockups for the home (search-first, typeahead), entity file, unit prices (desktop and
+  phone rows), signals and methodology screens, each with a 390 px layout and the
+  loading, empty, error-with-retry and stale-data states, and no script or external
+  request.
+- Given `docs/design/README.md`, then every screen names the user task, the guideline
+  sections it follows, what changes versus the live site and acceptance criteria.
+- Given any mockup, then Romanian text uses comma-below ș ț and every figure is either
+  copied from the live site on 2026-10-14 or shown as „—”.
+
+Test: `tests/test_design_screens.py` (no `<script`, no `http` other than the hub link,
+no cedilla diacritics, the five files and the README exist). Romanian copy in the
+mockups is agent-written: **needs human review**.
 
 ### OP-13 A plain label for the group-size filter (done)
 
