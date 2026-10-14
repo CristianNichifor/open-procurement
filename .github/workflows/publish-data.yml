@@ -1,21 +1,20 @@
 name: SEAP line items
 
 on:
-  # HELD, 2026-09-08. No SEAP traffic until ADR answers the request sent 2026-09-07.
+  # RESUMED, 2026-10-14, on the owner's decision. The hold of 2026-09-08 is lifted on one
+  # condition: SEAP's published limits are respected. An IP that sends more than 500 HTTP
+  # requests in 5 minutes, or more than 50 in one second, is blocked, whatever the URLs.
   #
-  # The schedule stays, and the SEAP ingest below is what is switched off: the cron keeps
-  # refreshing the meetings register, rebuilding the bundle and uploading to R2, none of
-  # which touches SEAP. Removing the whole trigger would have stopped those as collateral
-  # and left the R2 path unexercised, which is the opposite of useful while we wait.
+  # How that is kept (docs/incident-2026-09-07-seap-block.md, Status 2026-10-14):
+  #   - one limiter per process for every SEAP request, retries included: at most 450 in
+  #     any rolling 5 minutes and 2 in any second (src/achizitii/client.py, RateLimiter);
+  #   - a circuit breaker that stops the run on 403, 429, a block or captcha page, or three
+  #     connection failures in a row, with no retry;
+  #   - one SEAP run at a time (the concurrency group below, shared with backfill.yml);
+  #   - the run summary prints the requests sent and the busiest 5 minutes and second.
   #
-  # To resume: run the workflow by hand (Actions -> "SEAP line items" -> Run workflow).
-  # A manual run always ingests. To go back to collecting automatically, delete the
-  # `if:` on the Ingest step.
-  #
-  # THE COST OF WAITING, so it is not discovered later: unit prices cannot be
-  # reconstructed retroactively — the bulk exports carry no quantities — so the archive
-  # only ever grows forward from the first day collected. Every day spent held is a day
-  # that can never be added. 2026-09-05 and 2026-09-07 are already missing.
+  # Unit prices cannot be reconstructed from the bulk exports, which carry no quantities,
+  # so a day this job does not collect has to be collected by backfill.yml.
   schedule:
     # Once a day. It was briefly set to every three hours; then SICAP IP-blocked us
     # for "trafic automat care depaseste limitele de utilizare normala" and the whole
@@ -26,8 +25,8 @@ on:
     # platform considers normal, once a day is what the previous months ran at without
     # complaint. Raise it only with evidence, not with a throughput measurement.
     - cron: "20 4 * * *"
-  # A merge to main rebuilds the bundle and refreshes R2 at once instead of at 04:20.
-  # Without the dispatch the ingest stays off, so the hold above still holds.
+  # A merge to main rebuilds the bundle and refreshes R2 at once instead of at 04:20. It
+  # does not collect: the schedule and a manual dispatch do.
   push:
     branches: [main]
   workflow_dispatch:
@@ -42,7 +41,9 @@ on:
         description: "Cap records per day (smoke test only)"
         required: false
 
-# Never two writers on state/ or the data branch.
+# Never two writers on state/ or the data branch, and never two runs talking to SEAP at
+# once: the limiter is per process, so two overlapping runs would each get the full budget.
+# backfill.yml uses the same group. Not cancel-in-progress: a run is never cut mid-day.
 concurrency:
   group: ingest-seap
   cancel-in-progress: false
@@ -55,6 +56,7 @@ permissions:
   contents: write
   pull-requests: write
   id-token: write          # the broker reads this job's GitHub OIDC token
+  issues: write            # a failed run opens or updates "SEAP collection failed"
 
 jobs:
   ingest:
@@ -95,19 +97,25 @@ jobs:
         run: ./scripts/fetch_bundle.sh
 
       - name: Test
+        id: test
         run: pytest -q
 
-      # A scheduled run does NOT collect from SEAP while the hold above is in place; a
-      # run someone started by hand does. That keeps one button as the way back, rather
-      # than an edit to this file.
+      # Scheduled and manual runs collect; a push to main does not. The ingest exits
+      # non-zero when the circuit breaker stops it, after writing every day it finished;
+      # the steps below still archive and commit those, and the job ends failed.
       - name: Ingest
-        if: github.event_name == 'workflow_dispatch'
+        id: ingest
+        if: github.event_name != 'push'
+        env:
+          START: ${{ inputs.start }}
+          END: ${{ inputs.end }}
+          LIMIT: ${{ inputs.limit }}
         run: |
           set -euo pipefail
           ARGS=()
-          if [ -n "${{ inputs.start }}" ]; then
-            ARGS+=(--start "${{ inputs.start }}")
-            [ -n "${{ inputs.end }}" ] && ARGS+=(--end "${{ inputs.end }}")
+          if [ -n "${START:-}" ]; then
+            ARGS+=(--start "$START")
+            [ -n "${END:-}" ] && ARGS+=(--end "$END")
           else
             # The three days ending YESTERDAY. Today is never collected: the window is
             # `end = yesterday, start = end - (days_back - 1)`, so a day is only fetched
@@ -130,10 +138,13 @@ jobs:
             # 1.5 rps. Three days of insurance costs about a minute.
             ARGS+=(--days-back 3)
           fi
-          [ -n "${{ inputs.limit }}" ] && ARGS+=(--limit "${{ inputs.limit }}")
-          achizitii seap "${ARGS[@]}"
+          [ -n "${LIMIT:-}" ] && ARGS+=(--limit "$LIMIT")
+          # The report carries the requests sent and, if the breaker opened, why; the
+          # summary table is written to the run summary by the command itself.
+          achizitii seap "${ARGS[@]}" --report "$RUNNER_TEMP/seap-report.json"
 
       - name: Summarise
+        if: ${{ !cancelled() && steps.test.outcome == 'success' }}
         run: |
           python - <<'PY'
           import pathlib
@@ -159,10 +170,12 @@ jobs:
       # mirror in full, so it is refreshed on the same schedule. It is published as its
       # own table and joined to nothing — see src/achizitii/ruti.py.
       - name: Refresh the RUTI meetings register
+        if: ${{ !cancelled() && steps.test.outcome == 'success' }}
         run: achizitii ruti
         continue-on-error: true
 
       - name: Archive prices and rebuild the published bundle
+        if: ${{ !cancelled() && steps.test.outcome == 'success' }}
         run: achizitii publish --only preturi
 
       # R2 credentials are minted per run by the CN Webify token broker, which trusts this
@@ -177,6 +190,7 @@ jobs:
       # so, not a failure. The guard is a shell test inside the step on purpose: an `if:` on
       # the step is silent when it skips, and silence is the symptom this step once had.
       - name: Cloudflare token from the CN Webify broker
+        if: ${{ !cancelled() && steps.test.outcome == 'success' }}
         id: broker
         run: |
           set -euo pipefail
@@ -204,7 +218,7 @@ jobs:
       # bucket are not secret — the account id is in every dashboard URL — so they are set
       # here in the open; only the keys come from the broker step.
       - name: Publish data to R2
-        if: steps.broker.outputs.ready == 'true'
+        if: ${{ !cancelled() && steps.broker.outputs.ready == 'true' }}
         env:
           R2_ACCOUNT_ID: "5d5a0c8a05e5d8292065cd0c0cf60291"
           R2_BUCKET: open-procurement
@@ -215,6 +229,7 @@ jobs:
           achizitii publish --only preturi --r2
 
       - name: Commit the day
+        if: ${{ !cancelled() && steps.test.outcome == 'success' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -243,10 +258,10 @@ jobs:
           git fetch --quiet origin dev
           git switch --quiet -C "$BRANCH" origin/dev
           git stash pop --quiet --index
-          # While the ingest is held, a scheduled run commits the meetings register and
-          # a rebuilt bundle and nothing else. Saying "archive unit prices" over that
-          # would put a claim in the history that the run did not do.
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          # A push to main does not collect, so it commits the meetings register and a
+          # rebuilt bundle and nothing else. Saying "archive unit prices" over that would
+          # put a claim in the history that the run did not do.
+          if [ "${{ github.event_name }}" != "push" ]; then
             TITLE="data: archive unit prices for $DAY"
             git commit -m "$TITLE
 
@@ -257,8 +272,8 @@ jobs:
             TITLE="data: refresh the meetings register and rebuild the bundle"
             git commit -m "$TITLE
 
-          Run without the SEAP ingest, which is held — see the note on the schedule
-          trigger in .github/workflows/publish-data.yml. No SEAP endpoint was contacted."
+          Run by a push to main, which does not collect. No SEAP endpoint was
+          contacted."
           fi
           # A re-run for the same day replaces the branch; it is the run's own, never shared.
           git push --quiet --force origin "$BRANCH"
@@ -285,6 +300,7 @@ jobs:
           key: autoritati-${{ github.run_id }}
 
       - name: Upload raw artefacts
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: seap-${{ github.run_id }}
@@ -293,3 +309,13 @@ jobs:
             data/core
           retention-days: 30
           if-no-files-found: warn
+
+      # Opens "SEAP collection failed", or comments on it if it is open, with the reason
+      # from the ingest report.
+      - name: Report the failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EVENT: ${{ github.event_name }}
+        run: ./scripts/seap_failure_issue.sh "$RUNNER_TEMP/seap-report.json"
