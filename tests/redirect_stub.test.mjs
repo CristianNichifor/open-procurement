@@ -9,7 +9,7 @@ const html = read("index.html");
 const base = "https://projects.cristian-nichifor.com/open-procurement/";
 
 const destination = (pathname, search = "", hash = "") => {
-  const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)];
+  const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)];
   assert.equal(scripts.length, 1, "expected one redirect script");
   const seen = [];
   vm.runInNewContext(scripts[0][1], { location: { pathname, search, hash, replace: (u) => seen.push(u) } }, { timeout: 1000 });
@@ -32,7 +32,7 @@ test("path, query and hash carry across to the hub", () => {
 
 test("canonical, no-JavaScript fallback, visible link and noindex agree", () => {
   assert.ok(html.includes(`<link rel="canonical" href="${base}" />`));
-  const fallback = html.match(/<noscript>([\s\S]*?)<\/noscript>/i);
+  const fallback = html.match(/<noscript\b[^>]*>([\s\S]*?)<\/noscript\s*>/i);
   assert.ok(fallback, "no-JavaScript fallback is required");
   assert.ok(fallback[1].includes(`http-equiv="refresh" content="0; url=${base}"`));
   assert.ok(html.includes(`<a href="${base}">`));
