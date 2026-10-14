@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-CMQLjWpsv3wZeNK1z2mosGiM66ew20bmUxUlQOkY6Oc=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-k611o3l73jn9zEftsPGcIiu1QM4sI/YGiRsIx0xp4Dk=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -79,6 +79,16 @@
                  color:var(--on-accent); border-color:transparent; cursor:pointer;
                  font-weight:600; }
   .hero button:disabled { opacity:.5; cursor:progress; }
+  /* Suggestions from data/entitati.json, drawn over the page rather than pushing it down. */
+  .hero .civic-field { position:relative; min-width:0; }
+  #sugestii { position:absolute; top:100%; left:0; right:0; z-index:20; margin:2px 0 0;
+              padding:.25rem 0; list-style:none; background:var(--paper);
+              border:1px solid var(--line); border-radius:6px;
+              box-shadow:0 6px 18px rgb(0 0 0 / .12); max-height:22rem; overflow-y:auto; }
+  #sugestii li { display:flex; justify-content:space-between; gap:.8rem;
+                 padding:.5rem .9rem; cursor:pointer; }
+  #sugestii li small { color:var(--muted); white-space:nowrap; }
+  #sugestii li[aria-selected="true"], #sugestii li:hover { background:var(--accent-soft); }
   .hint { color:var(--muted); font-size:.82rem; margin:0 0 1.2rem; min-height:1em; }
   .subnav { display:flex; align-items:center; gap:.6rem; margin:-.4rem 0 1rem;
             font-size:.85rem; flex-wrap:wrap; }
@@ -417,8 +427,11 @@
   <form class="hero" id="hero">
     <div class="civic-field">
       <input id="q" class="civic-input" autocomplete="off"
+             role="combobox" aria-autocomplete="list" aria-expanded="false"
+             aria-controls="sugestii"
              aria-label="Caută o autoritate, o firmă, un CUI sau un produs"
              placeholder="Caută o autoritate, o firmă, un CUI sau un produs…">
+      <ul id="sugestii" role="listbox" aria-label="Sugestii" hidden></ul>
     </div>
     <button id="run" class="civic-button civic-button--primary" type="button" disabled>Caută</button>
   </form>
@@ -3076,6 +3089,83 @@ function heroSearch() {
   run();
 }
 
+// Names suggested as the reader types, from a small prebuilt index rather than the
+// engine: the suggestions are there in the seconds DuckDB-Wasm is still downloading,
+// which is exactly when a reader is typing. Choosing one searches its fiscal code, so the
+// file that opens is one organisation and needs no chooser. The index lists only the
+// largest buyers and suppliers and never a natural person; anything else is still found
+// by pressing Caută. A bundle without the file simply suggests nothing.
+const sugestii = (() => {
+  const box = $('sugestii'), q = $('q');
+  const fold = (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  let index = null, shown = [], active = -1;
+  fetch(url('entitati.json'))
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => { index = (d?.entitati || []).map((e) => [fold(e[0]), ...e]); })
+    .catch(() => {});
+  const close = () => {
+    box.hidden = true; box.innerHTML = ''; shown = []; active = -1;
+    q.setAttribute('aria-expanded', 'false');
+    q.removeAttribute('aria-activedescendant');
+  };
+  const mark = (i) => {
+    active = i;
+    [...box.children].forEach((li, j) => li.setAttribute('aria-selected', String(j === i)));
+    if (i >= 0) {
+      q.setAttribute('aria-activedescendant', box.children[i].id);
+      box.children[i].scrollIntoView({ block: 'nearest' });
+    } else q.removeAttribute('aria-activedescendant');
+  };
+  const choose = (i) => {
+    q.value = shown[i][2];
+    close();
+    heroSearch();
+  };
+  const draw = () => {
+    const term = fold(q.value.trim());
+    if (!index || term.length < 2 || /^(ro\s*)?[0-9]+$/.test(term)) return close();
+    const words = term.split(/\s+/);
+    shown = index.filter((e) => words.every((w) => e[0].includes(w))).slice(0, 8);
+    if (!shown.length) return close();
+    box.innerHTML = '';
+    shown.forEach((e, i) => {
+      const li = document.createElement('li');
+      li.id = `sugestie-${i}`; li.role = 'option';
+      li.setAttribute('aria-selected', 'false');
+      const tip = document.createElement('small');
+      tip.textContent = `${e[3] === 'a' ? 'autoritate' : 'firmă'} · CUI ${e[2]}`;
+      li.append(e[1], tip);
+      // mousedown, not click: a click lands after the input's blur has closed the list.
+      li.addEventListener('mousedown', (ev) => { ev.preventDefault(); choose(i); });
+      box.append(li);
+    });
+    active = -1;
+    box.hidden = false;
+    q.setAttribute('aria-expanded', 'true');
+  };
+  q.addEventListener('input', draw);
+  q.addEventListener('blur', close);
+  q.addEventListener('keydown', (e) => {
+    if (box.hidden) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const n = shown.length, step = e.key === 'ArrowDown' ? 1 : -1;
+      mark(active < 0 && step < 0 ? n - 1 : (active + step + n) % n);
+    } else if (e.key === 'Escape') {
+      close();
+    }
+  });
+  // Enter on a highlighted suggestion opens it; with none highlighted, Enter searches the
+  // words as typed. Returns whether it consumed the key.
+  return {
+    pick() {
+      if (box.hidden || active < 0) { close(); return false; }
+      choose(active);
+      return true;
+    },
+  };
+})();
+
 // Collapsed on a phone only. The summary — the caveat itself — stays visible either way;
 // this folds the explanation beneath it. Done in script because CSS cannot open or close
 // a <details>, and it must default to OPEN so that a reader without JavaScript, or a
@@ -3090,7 +3180,9 @@ $('run').addEventListener('click', heroSearch);
 // Enter in the box would also submit the form and reload the page. An inline onsubmit attribute
 // used to stop that; the Content-Security-Policy now blocks inline handlers.
 $('hero').addEventListener('submit', (e) => e.preventDefault());
-$('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') heroSearch(); });
+$('q').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !sugestii.pick()) heroSearch();
+});
 // Through rerun(), not run(), because each of these changes the result set: staying on
 // page 4 while the thing being paged through is replaced shows the reader an arbitrary
 // slice of something they have not seen the start of.
