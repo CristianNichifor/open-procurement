@@ -32,3 +32,7 @@ def test_the_guideline_uses_comma_below_diacritics_only() -> None:
     text = GUIDE.read_text(encoding="utf-8")
     cedilla = {c for c in "şţŞŢ" if c in text.replace("never ş ţ (cedilla)", "")}
     assert not cedilla
+
+
+def test_contributors_are_pointed_at_the_guideline() -> None:
+    assert "(docs/ux-guidelines.md)" in Path("CONTRIBUTING.md").read_text(encoding="utf-8")
