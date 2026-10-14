@@ -34,6 +34,10 @@ def test_the_guideline_uses_comma_below_diacritics_only() -> None:
     assert not cedilla
 
 
+def test_contributors_are_pointed_at_the_guideline() -> None:
+    assert "(docs/ux-guidelines.md)" in Path("CONTRIBUTING.md").read_text(encoding="utf-8")
+
+
 def test_the_group_size_filter_has_a_plain_label() -> None:
     html = Path("site/index.html").read_text(encoding="utf-8")
     label = html.split('<label for="minn">')[1].split("</label>")[0]
