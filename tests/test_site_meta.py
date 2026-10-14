@@ -7,6 +7,8 @@ project path) and nothing saying which one is real.
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import re
 import struct
 from html.parser import HTMLParser
@@ -76,3 +78,64 @@ def test_the_preview_image_is_drawn_by_a_script_in_the_repo() -> None:
     script = Path("scripts/make_og_image.mjs")
     assert script.is_file()
     assert re.search(r"og-image\.png", script.read_text(encoding="utf-8"))
+
+
+# --- Content Security Policy -----------------------------------------------------------
+#
+# Served as plain static files, so the policy travels in a <meta> tag. The inline module
+# is allowed by its hash rather than by 'unsafe-inline': an injected script tag would not
+# match it. scripts/build_pages.py rewrites the hash after the script changes.
+
+PAGES = ("index.html", "privacy.html", "metodologie.html", "replica.html")
+
+
+def _csp(page: str) -> dict[str, list[str]]:
+    parser = _Head()
+    parser.feed((SITE / page).read_text(encoding="utf-8").split("</head>")[0])
+    policy = parser.meta.get("content-security-policy", "")
+    assert policy, f"{page} has no Content-Security-Policy meta tag"
+    out: dict[str, list[str]] = {}
+    for directive in filter(None, (d.strip() for d in policy.split(";"))):
+        name, *values = directive.split()
+        out[name] = values
+    return out
+
+
+@pytest.mark.parametrize("page", PAGES)
+def test_every_page_has_a_restrictive_policy(page: str) -> None:
+    csp = _csp(page)
+    assert csp["default-src"] == ["'self'"]
+    assert csp["object-src"] == ["'none'"]
+    assert csp["base-uri"] == ["'self'"]
+    assert "'unsafe-inline'" not in csp["script-src"]
+    assert "'unsafe-eval'" not in csp["script-src"]
+
+
+@pytest.mark.parametrize("page", PAGES[1:])
+def test_static_pages_run_only_their_own_script(page: str) -> None:
+    assert _csp(page)["script-src"] == ["'self'"]
+
+
+def test_the_inline_module_is_allowed_by_its_hash() -> None:
+    source = (SITE / "index.html").read_text(encoding="utf-8")
+    scripts = re.findall(r"<script[^>]*>(.*?)</script>", source, flags=re.DOTALL)
+    assert len(scripts) == 1, "one inline script, one hash"
+    digest = base64.b64encode(hashlib.sha256(scripts[0].encode()).digest()).decode()
+    assert f"'sha256-{digest}'" in _csp("index.html")["script-src"], (
+        "the inline script changed: run `python scripts/build_pages.py` to update the hash"
+    )
+
+
+def test_the_engine_hosts_are_the_only_third_parties() -> None:
+    csp = _csp("index.html")
+    hosts = {v for d in csp.values() for v in d if v.startswith("https://")}
+    assert hosts == {"https://cdn.jsdelivr.net", "https://extensions.duckdb.org"}
+    assert "'wasm-unsafe-eval'" in csp["script-src"], "DuckDB-Wasm compiles WebAssembly"
+    assert "blob:" in csp["worker-src"], "DuckDB-Wasm starts its worker from a blob URL"
+
+
+def test_no_inline_event_handlers() -> None:
+    """A hash covers <script> elements, not onclick="" attributes; the policy blocks them."""
+    for page in PAGES:
+        text = (SITE / page).read_text(encoding="utf-8")
+        assert not re.search(r"\son[a-z]+=\"", text), f"{page} has an inline handler"
