@@ -162,7 +162,7 @@ Test: `tests/browser/ux.spec.js`.
 
 ## Theme D: search and phone layout
 
-### OP-9 Entity typeahead before the engine loads (todo)
+### OP-9 Entity typeahead before the engine loads (done)
 
 - Given a published bundle, when `achizitii publish` runs or
   `python scripts/build_entity_index.py` is run on an existing `site/data`, then
@@ -179,14 +179,15 @@ Test: `tests/browser/ux.spec.js`.
 
 Test: `tests/test_entity_index.py`, `tests/browser/typeahead.spec.js`.
 
-### OP-10 Two-line price rows on a phone (todo)
+### OP-10 Two-line price rows on a phone (done)
 
-- Given a price table at 480 px or narrower, then each row shows two lines: the product
-  with its median, then a bar spanning p10–p90 with its two values, instead of a card of
-  seven labelled lines.
-- Given a wider screen, then the table is unchanged.
+- Given a price table (product, median, p10, p90) at 480 px or narrower, then each row
+  shows two lines: the product with its median, then a bar spanning p10–p90 with the
+  median marked and both values beside it, instead of a card of seven labelled lines. The
+  row's "Detalii →" cue stays on the second line.
+- Given a wider screen, then the table is unchanged and the bar cell is hidden.
 
-Test: `tests/browser/mobile-prices.spec.js` at 390 px.
+Test: `tests/browser/mobile-prices.spec.js` at 390 px and 1440 px.
 
 ## Workflow-only (diff in the PR body for the maintainer)
 
