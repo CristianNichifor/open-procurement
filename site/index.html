@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-YF0WQoL4WPF7zEIWB7OKJVFJJeOtcbegsm+0FNROwIA=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-CLew+WWrJsajc1IpzzL4Z2iVdYQ01b7p1kF/lnjumMs=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -717,6 +717,11 @@ const label = (c) => LABELS[c] || c.replace(/_/g, ' ');
 
 // Which price group the drill-down is showing, or null.
 let drill = null;
+
+// A median over fewer than this many prices is shown, greyed and explained, on every
+// table that ranks by median: hiding it would hide the group, and marking it on the
+// front door only (where it started) left the same figure unmarked one click away.
+const SLAB = 10;
 
 // A day, from whatever the source happened to hand over. Arrow gives dates back as epoch
 // milliseconds; the manifest and the URL carry them as "YYYY-MM-DD". Both reach the same
@@ -1772,6 +1777,12 @@ function fillTable(el, table, {
       if (pret && (c === 'denumire_key' || c === 'mediana_ron')) {
         td.classList.add(c === 'denumire_key' ? 'c-produs' : 'c-mediana');
       }
+      if (pret && Number(row.n) < SLAB) {
+        // Greyed median, and a `*` on the product so the mark survives a phone's two-line
+        // row and a screen reader's linear read (design screen 03).
+        if (c === 'mediana_ron' || c === 'de_cate_ori') td.classList.add('slab');
+        if (c === 'denumire_key') td.append(' *');
+      }
       const extra = cellClass ? cellClass(row, c) : null;
       if (extra) td.classList.add(extra);
       if (numeric && !isLabel && money(c) && v !== null && v !== undefined) {
@@ -1789,6 +1800,17 @@ function fillTable(el, table, {
       td.dataset.label = '';
       td.textContent = act ? (act.cta || 'Fișă →') : '';
     }
+  }
+  // The explanation sits after the table's wrapper, once; a re-render replaces it.
+  const wrap = el.parentElement;
+  const prev = wrap && wrap.nextElementSibling;
+  if (prev && prev.classList.contains('nota-slab')) prev.remove();
+  if (wrap && pret && table.toArray().some((r) => Number(r.n) < SLAB)) {
+    const nota = document.createElement('p');
+    nota.className = 'nota-slab';
+    nota.textContent = `* Rapoartele în gri se sprijină pe mai puțin de ${SLAB} prețuri `
+      + 'și sunt doar orientative.';
+    wrap.after(nota);
   }
   return Math.min(table.numRows, maxRows);
 }
@@ -1954,10 +1976,8 @@ async function runPanorama() {
       // pack size to read the row, and the row needs it to open the right group.
       // A ratio of p90 to p10 over eight prices is two prices divided by each other.
       // Shown, because hiding it would hide the group, but greyed and explained.
-      const SLAB = 10;
       tabel(sec, preturi, {
         hide: ['cpv', 'marime_pachet', 'din', 'pana_la'],
-        cellClass: (row, c) => (c === 'de_cate_ori' && Number(row.n) < SLAB ? 'slab' : null),
         onRow: (row) => ({
           title: 'Vezi achizițiile din spatele acestei mediane',
           cta: 'Detalii →',
@@ -1971,13 +1991,6 @@ async function runPanorama() {
           },
         }),
       });
-      if (preturi.toArray().some((r) => Number(r.n) < SLAB)) {
-        const nota = document.createElement('p');
-        nota.className = 'nota-slab';
-        nota.textContent = `Rapoartele în gri se sprijină pe mai puțin de ${SLAB} prețuri `
-          + 'și sunt doar orientative.';
-        sec.append(nota);
-      }
     }
     catre(sec, `Toate cele ${Number(p.randuri).toLocaleString('ro-RO')} de linii de preț →`,
           () => selectTab('preturi'));
@@ -2986,12 +2999,22 @@ function selectTab(key, ind) {
   ].filter(([, d]) => d);
   const ziua = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString('ro-RO',
     { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-  const laZi = zile.length
-    ? `date până la ${ziua(zile.map(([, d]) => d).sort().at(-1))}` : '';
-  $('la-zi').textContent = laZi ? `${laZi[0].toUpperCase()}${laZi.slice(1)}.` : '';
+  const newest = zile.length ? zile.map(([, d]) => d).sort().at(-1) : null;
+  // The age in days, said plainly once the newest day is more than a week old: while the
+  // collection is held, the status badge stays true and the line says how old they are
+  // (UX guidelines §7, design screen 03).
+  const ageDays = newest
+    ? Math.floor((Date.now() - Date.parse(`${newest}T00:00:00Z`)) / 86400000) : 0;
+  const laZi = newest
+    ? `date până la ${ziua(newest)}${ageDays > 7 ? ` (acum ${ageDays} de zile)` : ''}` : '';
+  // One provenance line, said once: the source, the newest collected day, the method.
+  // The footer keeps the count only (D-6 in docs/ux-guidelines.md).
+  const metodologie = document.createElement('a');
+  metodologie.href = 'metodologie.html';
+  metodologie.textContent = 'Metodologie';
+  $('la-zi').replaceChildren('Date: data.gov.ro, exporturile ANAP/ADR' + (laZi ? ` · ${laZi}` : '') + ' · ', metodologie);
   $('la-zi').title = zile.map(([s, d]) => `${s}: ${ziua(d)}`).join(' · ');
-  $('meta').textContent = `${nf(ac.achizitii_directe_randuri)} achiziții directe`
-    + (laZi ? ` · ${laZi}` : '');
+  $('meta').textContent = `${nf(ac.achizitii_directe_randuri)} achiziții directe`;
 
   // Six plain tabs instead of seventeen. The eight indicators were shown as bare ids
   // ("dependenta-01"), which tells a reader nothing and pushed the table below the fold

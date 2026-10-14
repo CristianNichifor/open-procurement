@@ -75,7 +75,8 @@ test('the front door: no stray bullets, thin groups marked, data date shown', as
     await expect(page.locator('#panorama .nota-slab')).toContainText('10');
   }
   await expect(page.locator('#la-zi')).toContainText(/[Dd]ate până la \d{1,2} \S+ \d{4}/);
-  await expect(page.locator('footer')).toContainText(/[Dd]ate până la \d{1,2} \S+ \d{4}/);
+  // Said once (D-6): the footer keeps the count, not a second copy of the date.
+  await expect(page.locator('footer')).not.toContainText(/[Dd]ate până la/);
 });
 
 test('the phone tab bar shows that it scrolls', async ({ page }) => {
