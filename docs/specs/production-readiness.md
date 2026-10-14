@@ -377,6 +377,16 @@ Romanian legend text is agent-written: **needs human review**.
 
 Test: `tests/test_site_empty_year.py`; browser suite in CI.
 
+### OP-21 A natural person never gets a file (done)
+
+- Given the entity file, when the search term is a 13-digit code (CNP-shaped) or carries a
+  sole-trader marker (PFA, „persoană fizică”, „cabinet individual”, „întreprindere
+  individuală”), then the status line says natural persons have no file here and points
+  to the privacy page, and no query runs.
+
+Test: `tests/test_site_natural_person.py`; browser suite in CI. Romanian message is
+agent-written: **needs human review**.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.

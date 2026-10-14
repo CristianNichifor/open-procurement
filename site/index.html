@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ya2KrP9JMOpkPb456kUJCR1XI9InbaSj97aiNWEaolQ=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8tlP0CNpPHYmNCcKyTCLAG9Eh59CmS0dvD6hkRXaoiA=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -2662,6 +2662,16 @@ async function runDosar() {
   if (!term) {
     $('sql').textContent = '';
     status('Scrieți denumirea sau CUI-ul unei instituții ori firme.');
+    return;
+  }
+  // A natural person never gets a file: the published data leaves them out (gdpr.py and
+  // the privacy page say so), so a CNP-shaped code or a sole-trader marker gets the rule,
+  // not a search that would come back empty and look like a miss (design screen 02).
+  const naturalPerson = /^[0-9]{13}$/.test(term.replace(/^ro\s*/i, ''))
+    || /\bPFA\b|persoan[ăa] fizic[ăa]|cabinet individual|întreprindere individual[ăa]/i.test(term);
+  if (naturalPerson) {
+    $('sql').textContent = '';
+    status('Persoanele fizice nu au fișă aici: datele publicate le exclud (vezi Confidențialitate).');
     return;
   }
   // A name may mean several organisations. Resolve it to one before claiming to be a
