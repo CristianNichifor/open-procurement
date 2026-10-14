@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-RTpD0nOnuH/8uqGOyc1v4+USs6SOvMoa4PoiICqc4Xw=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iYVGjvJbWzdJgwmP54lpBWM+WvKKkm6p+queAZOZFvc=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -219,7 +219,7 @@
   .semnal-bar { display:inline-block; height:.7rem; background:var(--accent); border-radius:2px; vertical-align:middle; }
   .semnale-tbl td:last-child { width:32%; }
   .semnale-tbl td.temei { color:var(--muted); font-size:.85rem; }
-  .nota-slab { color:var(--muted); font-size:.8rem; margin:.4rem 0 0; }
+  .nota-slab, .nota-legenda { color:var(--muted); font-size:.8rem; margin:.4rem 0 0; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px;
              overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
   .status { margin:-.75rem 0 .75rem; }
@@ -2052,7 +2052,7 @@ async function runPanorama() {
     w.append(t);
     sec.append(w);
     const legend = document.createElement('p');
-    legend.className = 'legend nota-slab';
+    legend.className = 'legend nota-legenda';
     legend.textContent = 'Lungimea barei: numărul de achiziții marcate de semnal, față de semnalul cu cele mai multe.';
     sec.append(legend);
   }

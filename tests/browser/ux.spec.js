@@ -73,8 +73,7 @@ test('the front door: no stray bullets, thin groups marked, data date shown', as
     (await (await fetch('data/panorama.json')).json()).preturi.map(r => r.n));
   if (n.some(x => x < 10)) {
     await expect(page.locator('#panorama td.slab').first()).toBeVisible();
-    // The signals legend shares the muted note style; the thin-group note is the one naming 10.
-    await expect(page.locator('#panorama .nota-slab').filter({ hasText: '10' })).toHaveCount(1);
+    await expect(page.locator('#panorama .nota-slab')).toContainText('10');
   }
   await expect(page.locator('#la-zi')).toContainText(/[Dd]ate până la \d{1,2} \S+ \d{4}/);
   // Said once (D-6): the footer keeps the count, not a second copy of the date.
