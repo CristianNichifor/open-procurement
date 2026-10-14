@@ -5,7 +5,8 @@ for (const colorScheme of ['light', 'dark']) {
     await page.emulateMedia({ colorScheme });
     await page.setViewportSize({ width: 900, height: 900 });
     await page.goto('/#v=cpv');
-    await expect(page.locator('#run')).toBeEnabled();
+    // The tabs, not Caută: search is enabled during boot and queues until the engine is up.
+    await expect(page.locator('#tabs button').first()).toBeEnabled();
     await expect(page.locator('#pager')).toBeVisible();
     await expect(page.locator('#pag-prev')).toBeDisabled();
     await expect(page.locator('#pag-next')).toBeEnabled();
