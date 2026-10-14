@@ -312,12 +312,13 @@ def fetch_day(
         for result in pool.map(fetch_one, summaries):
             if result is not None:
                 details.append(result)
-    except SeapBlocked:
+    except BaseException:
         # Queued fetches would each fail on the open breaker without a request; cancelling
         # them just ends the day sooner. The day is discarded by the caller.
         pool.shutdown(wait=True, cancel_futures=True)
         raise
-    pool.shutdown(wait=True)
+    else:
+        pool.shutdown(wait=True)
 
     if len(details) < len(summaries):
         log.info("%s: %d of %d details retrieved", day.isoformat(), len(details), len(summaries))
