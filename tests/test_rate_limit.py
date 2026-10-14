@@ -69,7 +69,7 @@ import httpx
 import pytest
 
 from achizitii import client as client_mod
-from achizitii.client import RateLimiter, SeapClient
+from achizitii.client import CircuitBreaker, RateLimiter, SeapClient
 
 
 class FakeClock:
@@ -151,7 +151,7 @@ def test_both_caps_hold_together_at_the_default_settings() -> None:
         assert (
             sum(1 for t in stamps if stamps[i] - 300.0 < t <= stamps[i]) <= SEAP_MAX_PER_5_MIN * 0.9
         )
-        assert sum(1 for t in stamps if stamps[i] - 1.0 < t <= stamps[i]) <= 3
+        assert sum(1 for t in stamps if stamps[i] - 1.0 < t <= stamps[i]) <= 2
 
 
 def test_the_window_is_shared_across_threads() -> None:
@@ -205,21 +205,21 @@ def _client(
 ) -> tuple[SeapClient, _Transport]:
     transport = _Transport(statuses)
     limiter = _limiter(clock, **limits)
-    c = SeapClient(limiter=limiter, sleep=clock.sleep, transport=transport)
+    c = SeapClient(
+        limiter=limiter, sleep=clock.sleep, transport=transport, breaker=CircuitBreaker()
+    )
     return c, transport
 
 
-@pytest.mark.parametrize("status", [429, 403, 500, 503])
-def test_retries_back_off_exponentially_on_blockish_answers(status: int) -> None:
+@pytest.mark.parametrize("status", [500, 503])
+def test_retries_back_off_exponentially_on_server_errors(status: int) -> None:
     clock = FakeClock()
     c, transport = _client(clock, [status, status, 200])
     with c:
         assert c.get("/x") == {"ok": True}
     assert transport.calls == 3
     # One backoff sleep per failed attempt, doubling from the base.
-    assert clock.sleeps[-2:] == [config.BACKOFF_BASE, config.BACKOFF_BASE * 2] or (
-        config.BACKOFF_BASE in clock.sleeps and config.BACKOFF_BASE * 2 in clock.sleeps
-    )
+    assert config.BACKOFF_BASE in clock.sleeps and config.BACKOFF_BASE * 2 in clock.sleeps
 
 
 def test_gives_up_after_retries_and_raises_the_last_status() -> None:
@@ -279,4 +279,79 @@ def test_defaults_are_the_safe_ones(monkeypatch: pytest.MonkeyPatch) -> None:
         "ACHIZITII_SEAP_MAX_RPS",
     ):
         monkeypatch.delenv(name, raising=False)
-    assert config.seap_limits() == (450, 3, 1.5)
+    assert config.seap_limits() == (450, 2, 1.5)
+
+
+# -- OP-29: two a second, on one path ----------------------------------------------------
+
+
+def test_default_per_second_cap_is_two_with_no_bursts() -> None:
+    """SEAP's published ceiling is 50 a second; the collector stays at 2, and the burst
+    cap and the spacing agree, so there is no moment where three go out together."""
+    assert config.SEAP_MAX_BURST <= 2
+    assert config.MAX_RPS <= 2
+    clock = FakeClock()
+    limiter = RateLimiter(clock=clock, sleep=clock.sleep)  # the shipped defaults
+    stamps = _stamps(limiter, clock, 600)
+    for i in range(len(stamps)):
+        assert sum(1 for t in stamps if stamps[i] - 1.0 < t <= stamps[i]) <= 2
+        assert sum(1 for t in stamps if stamps[i] - 300.0 < t <= stamps[i]) <= 450
+
+
+def test_retries_count_against_the_per_second_cap() -> None:
+    clock = FakeClock()
+    c, transport = _client(clock, [500, 500, 200], max_burst=2, max_rps=1000.0)
+    with c:
+        c.get("/x")
+    stamps = c._limiter.send_times()
+    assert transport.calls == 3
+    for i in range(len(stamps)):
+        assert sum(1 for t in stamps if stamps[i] - 1.0 < t <= stamps[i]) <= 2
+
+
+def test_only_the_client_names_the_seap_host() -> None:
+    """Every SEAP request path (daily ingest, backfill, any helper) goes through SeapClient
+    and its one limiter. A second module that builds its own URL would have its own budget."""
+    from pathlib import Path
+
+    src = Path(client_mod.__file__).parent
+    offenders = [
+        p.name
+        for p in src.glob("*.py")
+        if p.name not in {"client.py", "config.py"}
+        and ("e-licitatie" in p.read_text(encoding="utf-8")
+             or "config.API" in p.read_text(encoding="utf-8")
+             or "config.BASE" in p.read_text(encoding="utf-8"))
+    ]
+    assert not offenders, f"these reach SEAP without SeapClient: {offenders}"
+
+
+# -- OP-32: what was actually sent -------------------------------------------------------
+
+
+def test_stats_report_total_and_the_busiest_window_and_second() -> None:
+    clock = FakeClock()
+    limiter = _limiter(clock, max_rps=1000.0, max_per_window=10, window=300.0, max_burst=2)
+    _stamps(limiter, clock, 25)
+    stats = limiter.stats()
+    assert stats["requests"] == 25
+    assert stats["max_per_window"] == 10
+    assert stats["max_per_second"] == 2
+
+
+def test_stats_are_measured_when_the_request_goes_out() -> None:
+    """Measured after the sleep, so a late wake-up shows up in the numbers instead of
+    hiding behind the reservation it was meant to honour."""
+    clock = FakeClock()
+
+    def oversleep(seconds: float) -> None:
+        clock.sleep(seconds + 0.25)
+
+    limiter = RateLimiter(
+        max_rps=1.0, max_per_window=450, window=300.0, max_burst=2,
+        clock=clock, sleep=oversleep,
+    )
+    limiter.wait()
+    limiter.wait()
+    assert limiter.send_times() == pytest.approx([1000.0, 1001.25])
+    assert limiter.stats()["requests"] == 2

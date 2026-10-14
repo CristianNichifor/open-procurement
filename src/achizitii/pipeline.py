@@ -26,7 +26,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from . import config, gdpr, ocds
-from .client import RateLimiter, SeapClient
+from .client import RateLimiter, SeapBlocked, SeapClient
 from .normalize import normalize_item
 
 log = logging.getLogger(__name__)
@@ -300,15 +300,25 @@ def fetch_day(
             return None
         try:
             detail = client.direct_acquisition(da_id)
+        except SeapBlocked:
+            raise  # the whole run stops; see client.CircuitBreaker
         except Exception as exc:  # noqa: BLE001
             log.warning("detail %s failed: %s", da_id, exc)
             return None
         return gdpr.scrub(_merge_summary(detail, summary))
 
-    with ThreadPoolExecutor(max_workers=config.DETAIL_WORKERS) as pool:
+    pool = ThreadPoolExecutor(max_workers=config.DETAIL_WORKERS)
+    try:
         for result in pool.map(fetch_one, summaries):
             if result is not None:
                 details.append(result)
+    except BaseException:
+        # Queued fetches would each fail on the open breaker without a request; cancelling
+        # them just ends the day sooner. The day is discarded by the caller.
+        pool.shutdown(wait=True, cancel_futures=True)
+        raise
+    else:
+        pool.shutdown(wait=True)
 
     if len(details) < len(summaries):
         log.info("%s: %d of %d details retrieved", day.isoformat(), len(details), len(summaries))
@@ -480,14 +490,30 @@ def write_parquet(rows: list[dict[str, Any]], out_dir: str | None = None) -> str
 def run(
     start: date, end: date, skip_raw: bool = False, limit: int | None = None
 ) -> dict[str, Any]:
-    """Fetch a date range and produce raw + OCDS + Parquet."""
+    """Fetch a date range and produce raw + OCDS + Parquet.
+
+    A day is written only once it has been collected in full. If the circuit breaker opens
+    (or anything else stops a day part-way), that day is discarded, the run stops there,
+    and the days finished before it are still written. The report says why in `aborted`.
+    """
     all_rows: list[dict[str, Any]] = []
     manifest: list[dict[str, Any]] = []
+    aborted: str | None = None
+    aborted_day: str | None = None
 
     with SeapClient() as client:
         authorities = AuthorityResolver(client)
         for day in daterange(start, end):
-            details = fetch_day(client, day, limit=limit)
+            try:
+                details = fetch_day(client, day, limit=limit)
+            except SeapBlocked as exc:
+                aborted, aborted_day = f"circuit breaker: {exc}", day.isoformat()
+                log.error("%s: stopped, day discarded (%s)", aborted_day, exc)
+                break
+            except Exception as exc:  # noqa: BLE001 - keep the finished days, then fail
+                aborted, aborted_day = f"{type(exc).__name__}: {exc}", day.isoformat()
+                log.error("%s: stopped, day discarded (%s)", aborted_day, exc)
+                break
             if not details:
                 continue
             entry: dict[str, Any] = {"date": day.isoformat(), "records": len(details)}
@@ -503,6 +529,7 @@ def run(
             # authorities it just paid for.
             entry["authorities_cached"] = authorities.save()
             log.info("%s: %d items", day.isoformat(), len(rows))
+        requests = client.request_stats()
 
     out = write_parquet(all_rows) if all_rows else None
     comparable = sum(1 for r in all_rows if r["comparabil"])
@@ -512,4 +539,37 @@ def run(
         "comparable_items": comparable,
         "parquet": out,
         "parse_version": PARSE_VERSION,
+        "aborted": aborted,
+        "aborted_day": aborted_day,
+        "requests": requests,
     }
+
+
+def summary_markdown(report: dict[str, Any]) -> str:
+    """The run summary: what was sent, against the enforced and the published limits."""
+    per_window, burst, _ = config.seap_limits()
+    req = report.get("requests") or {}
+    lines = ["## SEAP requests", ""]
+    if report.get("aborted"):
+        lines += [
+            f"**Stopped:** {report['aborted']} (day {report.get('aborted_day')} discarded).",
+            "",
+        ]
+    lines += [
+        "| Measure | Sent | Enforced | Published |",
+        "|---|---:|---:|---:|",
+        f"| Total requests | {req.get('requests', 0):,} | | |",
+        (
+            f"| Most in any rolling 5 minutes | {req.get('max_per_window', 0)} | {per_window} "
+            f"| {config.SEAP_PUBLISHED_PER_5_MIN} |"
+        ),
+        (
+            f"| Most in any one second | {req.get('max_per_second', 0)} | {burst} "
+            f"| {config.SEAP_PUBLISHED_PER_SECOND} |"
+        ),
+        "",
+        "Days kept: " + (", ".join(d["date"] for d in report.get("days") or []) or "none")
+        + f"; {report.get('items', 0):,} line items.",
+        "",
+    ]
+    return "\n".join(lines)

@@ -87,14 +87,19 @@ SEAP_MAX_PER_WINDOW = 450
 is a request too. One limiter per process (client.SEAP_LIMITER) enforces this, so two
 workers do not each get 450."""
 
-SEAP_MAX_BURST = 3
+SEAP_MAX_BURST = 2
 """Requests allowed in any one second. The published ceiling is 50; nothing here needs more
-than a few, and a burst is what the block message complains about."""
+than MAX_RPS rounded up, and a burst is what the block message complains about. With
+MAX_RPS at 1.5 the spacing alone already allows no more than 2; this makes it explicit."""
+
+SEAP_BREAKER_CONNECTION_FAILURES = 3
+"""Connection failures in a row that stop the whole run (client.CircuitBreaker). A 403, a
+429 or a block/captcha page stops it at once."""
 
 BACKOFF_BASE = 5.0
-"""Seconds before the first retry of a 429, 403 or 5xx; doubles each attempt. A 403 is
-retried because that is the status of the IP block itself: if it clears, the run goes on;
-if it does not, the run fails after RETRIES slow attempts rather than hammering."""
+"""Seconds before the first retry of a connection error or a 5xx; doubles each attempt.
+403 and 429 are not retried: they open the circuit breaker, because a blocked IP that keeps
+knocking is what the 2026-09-07 notice complained about."""
 
 
 def seap_limits() -> tuple[int, int, float]:

@@ -1,8 +1,82 @@
 # 2026-09-07 — SEAP blocked our IP
 
-## Status, 2026-10-14
+## Status, 2026-10-14: the hold is lifted
 
-**GitHub runners reach SEAP; the schedule is still held.**
+**On the owner's decision, scheduled collection from SEAP resumes**, on one condition:
+SEAP's published limits are respected. The hold of 2026-09-08 is over; no answer to the
+request of 2026-09-08 has been recorded here, and the decision does not depend on one.
+
+**The limits, as SEAP publishes them.** An IP is blocked if it makes more than **500 HTTP
+requests within 5 minutes**, or more than **50 HTTP requests in one second**, whatever the
+URLs are.
+
+**How they are enforced** (`src/achizitii/client.py`, `config.py`):
+
+| Ceiling | Published | Enforced | Where |
+|---|---|---|---|
+| requests in any rolling 5 minutes | 500 | 450 | `SEAP_MAX_PER_WINDOW` |
+| requests in any one second | 50 | 2 | `SEAP_MAX_BURST` |
+| spacing between requests | — | 1 every 0.67 s (1.5/s) | `MAX_RPS` |
+
+- One `RateLimiter` per process, shared by every `SeapClient`, every worker thread and
+  every retry. Only `client.py` names the SEAP host (a test enforces it), so the daily
+  ingest, the backfill and any helper all pass through it.
+- One SEAP run at a time: `publish-data.yml` and `backfill.yml` share the concurrency
+  group `ingest-seap`, never cancelling a run in progress. The limiter is per process, so
+  two overlapping runs would each have had the full budget.
+- Every run writes to its summary the requests it sent, the most in any rolling 5 minutes
+  and the most in any one second, measured when each request went out, next to the
+  enforced and published limits. Those numbers are the evidence that the limits held.
+
+**The circuit breaker** (`client.CircuitBreaker`, one per process). It opens on an HTTP
+**403** or **429**, on a page that reads as the block notice or a captcha, or on **3
+connection failures in a row**. Nothing is retried after that: the request that saw it
+is the last one sent, from any thread. The run stops, the day it was collecting is
+discarded (written nowhere, so the never-shrink archive cannot freeze half a day), the
+days it finished are archived and committed, and the job ends **failed**. A failed run
+opens the issue "SEAP collection failed", or comments on it if it is open, with the
+reason and the request counts. 5xx answers are still retried with backoff, inside the
+same limiter.
+
+A weekday is about 9,700 requests, about 1 h 50 min at the cap; both jobs keep a
+300-minute timeout. Before this, the last run (38437561637, 2026-10-13, 9,746 requests
+in 1 h 49 min, all HTTP 200) found GitHub's addresses unrestricted.
+
+Note that the schedule only runs the workflow file on `main`, so the scheduled run
+collects from the first 04:20 UTC after this change is promoted from `dev` to `main`.
+
+### Backfilling the days missed since 2026-10-12
+
+`backfill.yml` collects **one day per dispatch**. Dispatch a day, wait for the run to
+finish, then dispatch the next; each run opens a `data/backfill-<day>` pull request into
+`dev`.
+
+```sh
+gh workflow run backfill.yml -R CristianNichifor/open-procurement -f day=2026-10-12
+gh run watch -R CristianNichifor/open-procurement \
+  "$(gh run list -R CristianNichifor/open-procurement -w backfill.yml -L 1 --json databaseId --jq '.[0].databaseId')"
+```
+
+Which days: from 2026-10-12 up to the day before the first scheduled run's window (it
+collects the three days ending yesterday, Romanian time). 2026-10-10 and 2026-10-11 are
+missing too: run 38437561637 collected them but failed at its commit step before
+uploading anything. The archive on `dev` holds 2026-07-01 to 2026-07-06 and 2026-09-06;
+every other day since 2026-09-07 is absent and can be collected the same way. A day that
+has not ended in Romanian time is refused.
+
+**Which days are past SEAP's window.** The repository records no retention window for
+`api-pub`, and none is assumed here. What it does record: days 2026-07-01 to 2026-07-06
+were collected from a runner on 2026-09-08, more than two months later, and
+`docs/sources.md` notes that the history from 2007 to 2018 is served from
+`istoric.e-licitatie.ro`. So no day since 2026-10-12 is known to be unrecoverable. The
+earlier lines in this document that call held days lost for good were about the bulk
+exports, which carry no quantities, not evidence of a window in the API. If a backfill
+of a weekday returns no acquisitions, treat that as the first evidence of a window and
+record it here.
+
+## Observation, 2026-10-13: GitHub runners reach SEAP
+
+Superseded by the status above; kept as the record of what was known before the decision.
 
 On 2026-10-13 a manual run of the SEAP line-items job,
 [run 38437561637](https://github.com/CristianNichifor/open-procurement/actions/runs/38437561637)
@@ -193,22 +267,23 @@ per process shared by every `SeapClient`, every worker thread and every retry):
 | Ceiling | Published | Enforced | Setting |
 |---|---|---|---|
 | requests in any rolling 5 minutes | 500 | 450 | `SEAP_MAX_PER_WINDOW` |
-| requests in any one second | 50 | 3 | `SEAP_MAX_BURST` |
+| requests in any one second | 50 | 2 (3 until the status above) | `SEAP_MAX_BURST` |
 | sustained spacing | 1.67/s | 1.5/s (one every 0.67 s) | `MAX_RPS` |
 
 - Each call reserves the next free send slot against the three ceilings and sleeps until
   it; the window is rolling, measured over reserved send times, not reset every 5 minutes.
 - A retry is a request SEAP sees, so it takes a slot like any other.
-- 403, 429 and 5xx are retried with exponential backoff (5, 10, 20 s) and then raised.
-  403 is in the set because it is the status of the block itself.
+- 5xx and connection errors are retried with exponential backoff (5, 10, 20 s) and then
+  raised. 403 and 429 were retried too; since the status above they open the circuit
+  breaker instead.
 - `ACHIZITII_SEAP_MAX_PER_WINDOW`, `ACHIZITII_SEAP_MAX_BURST` and `ACHIZITII_SEAP_MAX_RPS`
   can lower these for a cautious run. Asking for more is clamped to 475 per window, 5 a
   second and the matching sustained rate: the environment can tighten, never cross.
 
 `tests/test_rate_limit.py` proves the caps on a fake clock (1,200 requests never exceed
-450 in any 300 s; the fourth request in a second waits; four threads share one window;
+450 in any 300 s; the third request in a second waits; four threads share one window;
 retries count; 404 is not retried) and that the defaults are the safe ones.
 
 Throughput is unchanged, so the workflow's 300-minute timeout still holds: one weekday is
-roughly 8,900 detail calls plus 36 list calls, about 1h40m at 1.5 a second. A manual
-backfill of more than two full days in one run would not fit, and should be split.
+roughly 8,900 detail calls plus 36 list calls, about 1h40m at 1.5 a second. Backfill is
+now one day per dispatch (see the status above).
