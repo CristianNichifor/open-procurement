@@ -1,4 +1,4 @@
-"""OP-17: every item in the production-readiness spec has a unique id, a status and a test."""
+"""OP-24: every item in the production-readiness spec has a unique id, a status and a test."""
 import re
 from collections import Counter
 from pathlib import Path

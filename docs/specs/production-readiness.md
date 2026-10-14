@@ -65,7 +65,7 @@ English only) is agent-written: **needs human review**.
 
 Test: `tests/browser/cdn-fallback.spec.js` (route `**/cdn.jsdelivr.net/**` aborted).
 
-### OP-17 Spec items have unique ids and a named test (done)
+### OP-24 Spec items have unique ids and a named test (done)
 
 - Given `docs/specs/production-readiness.md`, when its `###` headings are read, then each
   is `ID title (status)` with a status from the list above, no id is used twice (the
