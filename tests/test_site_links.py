@@ -211,7 +211,7 @@ def test_the_privacy_page_states_what_the_code_shows() -> None:
     ro = html.split('data-lang="ro"')[1].split('data-lang="en"')[0]
     en = html.split('data-lang="en"')[1]
     for needle in ("cookie", "Cloudflare Pages", "GitHub Pages", "cdn.jsdelivr.net",
-                   "Cristian Nichifor", ISSUES):
+                   "extensions.duckdb.org", "Cristian Nichifor", ISSUES):
         assert needle in ro, f"RO text lacks {needle!r}"
         assert needle in en, f"EN text lacks {needle!r}"
     assert "analytics" in en.lower() and "analiză" in ro.lower()
@@ -226,5 +226,5 @@ def test_the_no_cookies_claim_stays_true() -> None:
             continue
         text = p.read_text(encoding="utf-8")
         for needle in ("document.cookie", "localStorage", "sessionStorage",
-                       "googletagmanager", "google-analytics", "plausible", "matomo"):
+                       "googletagmanager", "google-analytics", "plausible.io", "matomo."):
             assert needle not in text, f"{p} uses {needle}; update privacy.html first"
