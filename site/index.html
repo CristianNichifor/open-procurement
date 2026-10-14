@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Y/6lhnT6Ai1frxK9a8Gg+lmJvcOStxnYh2Kf/2EdcR8=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-vMukrwDANRwRalW4mIeXFsZSW9cA2jfLEbRqA2Ea0TE=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -219,6 +219,9 @@
   .nota-slab { color:var(--muted); font-size:.8rem; margin:.4rem 0 0; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px;
              overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+  .status { margin:-.75rem 0 .75rem; }
+  .status-badge { display:inline-block; font-size:.75rem; font-weight:600; letter-spacing:.02em;
+    padding:.1rem .5rem; border:1px solid var(--muted); border-radius:999px; color:var(--muted); }
   .la-zi { color:var(--muted); font-size:.8rem; margin:-1rem 0 1.25rem; }
   .la-zi:empty { display:none; }
   /* The swatch carries identity; the text stays in ink. A light categorical hue is
@@ -443,6 +446,7 @@
 <body>
 <main class="civic-scope">
   <h1>Achiziții publice din România</h1>
+  <p class="status"><span class="status-badge" title="Exporturi data.gov.ro, actualizate la zi; vezi linia de mai jos">Date reale</span></p>
   <p class="sub" id="scale">Date deschise despre banii cheltuiți de instituțiile publice.</p>
   <p class="la-zi" id="la-zi"></p>
 
@@ -722,6 +726,10 @@ const dayOf = (v) => {
   if (typeof v === 'string') return v.slice(0, 10);
   return new Date(Number(v)).toISOString().slice(0, 10);
 };
+
+// The same day, for a reader: 14.10.2026, not 2026-10-14. Only for what is displayed;
+// the CSV (csvCell) and the URL (dayOf) keep ISO, which sorts and compares.
+const ziRo = (v) => new Date(Number(v)).toLocaleDateString('ro-RO', { timeZone: 'UTC' });
 
 // The archive files a group can possibly appear in.
 //
@@ -1757,7 +1765,7 @@ function fillTable(el, table, {
         // "true" in an otherwise Romanian table. Affects `comparabil` here and `anulat`
         // in the meetings register.
         : typeof v === 'boolean' ? (v ? 'da' : 'nu')
-        : dates.has(c) ? new Date(Number(v)).toISOString().slice(0, 10)
+        : dates.has(c) ? ziRo(v)
         : numeric && !isLabel && money(c) ? ron(v)
         : numeric && !isLabel ? Number(v).toLocaleString('ro-RO') : valueLabel(c, String(v));
       if (numeric) td.className = 'num';
