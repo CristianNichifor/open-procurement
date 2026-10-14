@@ -24,7 +24,7 @@ firm, a CUI or a product and gets an answer; everything else on the front door
 
 Top to bottom, on every page of `site/`:
 
-1. Family bar linking back to the hub (civic-ui `FamilyBar`). *Not present yet — D-1.*
+1. Family bar linking back to the hub (civic-ui `FamilyBar`). Present on every page (OP-18, OP-27).
 2. H1 „Achiziții publice din România” and one line of purpose (`#scale`).
 3. Provenance line: „Date: sursă, an” and the as-of date (`#la-zi`, footer `#meta`).
 4. Primary task: search (`#hero`), then the caveat banner („Cifrele arată tipare, nu
@@ -117,9 +117,9 @@ newest data is instead of claiming freshness.
 From the live review (2026-10-14) and a code audit of `site/index.html`; screenshots at
 1440 and 390 px were not taken in this pass.
 
-- **D-1** No family bar back to the hub; the name differs between the hub ("Open
+- ~~**D-1** No family bar back to the hub; the name differs between the hub ("Open
   Procurement") and the site („Achiziții publice din România”). Needs the hub URL and a
-  naming decision from the owner.
+  naming decision from the owner.~~ Fixed by OP-18 (static pages) and OP-27 (front page).
 - ~~**D-2** No status badge from the vocabulary in §7.~~ Fixed by OP-26.
 - **D-3** Table date columns show ISO dates (`toISOString`) to readers; switch the displayed form to `ro-RO`, keep ISO in CSV and URL.
 - ~~**D-4** Error states have no retry action.~~ Fixed by OP-12.

@@ -105,7 +105,7 @@ duplicate an open pull request. Update the row when a PR lands.
 | Plain label for the group-size filter (D-7) | 03 | #110 |
 | Retry on every failed query (D-4) | all | #109 (merged) |
 | No internal terms in the interface (guard) | all | #119 |
-| Family bar on the front page (D-1, front half) | 01–04 | open: start after #114 and #118 land |
+| Family bar on the front page (D-1, front half) | 01–04 | OP-27 |
 | Entity file head from the entity index, stat tiles, per-year chart | 02 | open |
 | Range chart above the unit-price table | 03 | open |
 | Signals table with legal basis and share | 04 | open |

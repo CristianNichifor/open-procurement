@@ -319,7 +319,7 @@ agent-written: **needs human review**.
 
 ### OP-26 Status badge from the vocabulary (done)
 
-- Given the front door, then exactly one badge under the H1 carries one of „Date reale”,
+- Given the front door, then exactly one badge (in the family bar since OP-27) carries one of „Date reale”,
   „Date demonstrative”, „Prototip”, „Arhivat” (UX guidelines §7); it says „Date reale”,
   and the as-of line below it keeps saying how old the newest data is.
 
