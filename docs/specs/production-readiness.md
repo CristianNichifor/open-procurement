@@ -326,6 +326,57 @@ agent-written: **needs human review**.
 Test: `tests/test_site_status.py`. Romanian badge title is agent-written: **needs human
 review**. Closes D-2 in `docs/ux-guidelines.md`.
 
+### OP-16 One provenance line under the title (done)
+
+- Given the front door after the bundle loads, then `#la-zi` is one line: „Date:
+  data.gov.ro, exporturile ANAP/ADR · date până la <day> · Metodologie”, with the
+  methodology as a link; its title lists each source's newest day.
+- Given the footer, then `#meta` carries the count of direct acquisitions only; the date
+  is said once.
+- Given a newest collected day more than seven days old, then the line adds „(acum N de
+  zile)” (design screen 03: the stale collection says its age); fresher data adds nothing.
+
+Test: `tests/test_site_provenance.py`; `tests/browser/ux.spec.js` („data date shown”).
+Closes D-6 in `docs/ux-guidelines.md`.
+
+### OP-17 Thin groups marked on every median view (done)
+
+- Given any table whose rows carry a product, a median and the percentiles, when a group
+  rests on fewer than 10 prices, then its median cell is greyed (`td.slab`) and one note
+  under the table says the greyed figures are only indicative; the threshold is one
+  module-level constant shared with the front door; the product cell carries a `*`
+  (design screen 03), and the note begins with `*` so the mark is explained once.
+- Given a re-render of the same table (paging, sorting), then the note appears once.
+
+Test: `tests/test_site_thin.py`; `tests/browser/ux.spec.js` („thin groups marked”).
+Closes D-5 in `docs/ux-guidelines.md`.
+
+### OP-25 Suggestions are touch targets (done)
+
+- Given the typeahead listbox, then each suggestion row is at least 44 px tall with its
+  text vertically centred (design screen 01 Home, acceptance), so a thumb can hit one
+  row on a phone.
+
+Test: `tests/test_site_touch.py`; `tests/browser/typeahead.spec.js` drives the listbox.
+
+### OP-19 Signals as labelled bars, same rows as a table (done)
+
+- Given the front door's „Ce merită verificat” block, then the signals are one table:
+  the signal (a button that opens it), its legal basis (design screen 04; a dash when
+  the manifest carries none), its count, and a bar whose width is the count relative to
+  the largest; a legend line under it says what the bar measures.
+
+Test: `tests/test_site_signals.py`; `tests/browser/ux.spec.js` (front door) in CI.
+Romanian legend text is agent-written: **needs human review**.
+
+### OP-20 Empty year offers every year (done)
+
+- Given a view filtered to one year, when the query returns no rows, then the status line
+  says so and offers a „Toți anii” button that clears the year and runs again; without a
+  year filter the advice stays as it was.
+
+Test: `tests/test_site_empty_year.py`; browser suite in CI.
+
 ### OP-21 A natural person never gets a file (done)
 
 - Given the entity file, when the search term is a 13-digit code (CNP-shaped) or carries a

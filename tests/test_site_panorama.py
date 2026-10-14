@@ -62,7 +62,8 @@ def test_a_link_still_beats_the_front_door(source: str) -> None:
 def test_it_makes_no_claim_of_its_own(source: str) -> None:
     """Each block is a doorway into a view that already existed. A summary that computed
     its rows differently from the tab it links to would be a second source of truth."""
-    body = _body(source, "async function runPanorama(", 9000)
+    # 10500: the signals block grew into a table with a legal-basis column (OP-19).
+    body = _body(source, "async function runPanorama(", 10500)
     for target in ("selectTab('preturi')", "selectTab('detaliu')",
                    "selectTab('dosar')", "selectTab('indicatori', ind)"):
         assert target in body, f"no doorway to {target}"
@@ -107,7 +108,7 @@ def test_the_blocks_arrive_together(source: str) -> None:
 def test_the_signal_counts_cost_nothing(source: str) -> None:
     """The manifest already carries them. Eight COUNT(*) queries to fill a summary screen
     would be the most expensive thing on the fastest page."""
-    body = _body(source, "const semnale = manifest.indicatori || [];", 1200)
+    body = _body(source, "const semnale = manifest.indicatori || [];", 2800)
     assert "ind.rows" in body
     assert "conn.query" not in body
 

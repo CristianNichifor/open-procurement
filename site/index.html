@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-7Kw9pHzci85h9wcDoW4eIICiW+DjhniMK71+JYlgd6w=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8tlP0CNpPHYmNCcKyTCLAG9Eh59CmS0dvD6hkRXaoiA=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -86,7 +86,7 @@
               border:1px solid var(--line); border-radius:6px;
               box-shadow:0 6px 18px rgb(0 0 0 / .12); max-height:22rem; overflow-y:auto; }
   #sugestii li { display:flex; justify-content:space-between; gap:.8rem;
-                 padding:.5rem .9rem; cursor:pointer; }
+                 padding:.5rem .9rem; cursor:pointer; min-height:44px; align-items:center; }
   #sugestii li small { color:var(--muted); white-space:nowrap; }
   #sugestii li[aria-selected="true"], #sugestii li:hover { background:var(--accent-soft); }
   .hint { color:var(--muted); font-size:.82rem; margin:0 0 1.2rem; min-height:1em; }
@@ -216,7 +216,10 @@
            background:var(--paper); box-shadow:-6px 0 6px -6px var(--line); }
   tr.drillable:hover td.cta, tr.drillable:focus-visible td.cta { background:var(--accent-soft); }
   td.slab { color:var(--muted); font-style:italic; }
-  .nota-slab { color:var(--muted); font-size:.8rem; margin:.4rem 0 0; }
+  .semnal-bar { display:inline-block; height:.7rem; background:var(--accent); border-radius:2px; vertical-align:middle; }
+  .semnale-tbl td:last-child { width:32%; }
+  .semnale-tbl td.temei { color:var(--muted); font-size:.85rem; }
+  .nota-slab, .nota-legenda { color:var(--muted); font-size:.8rem; margin:.4rem 0 0; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px;
              overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
   .status { margin:-.75rem 0 .75rem; }
@@ -717,6 +720,11 @@ const label = (c) => LABELS[c] || c.replace(/_/g, ' ');
 
 // Which price group the drill-down is showing, or null.
 let drill = null;
+
+// A median over fewer than this many prices is shown, greyed and explained, on every
+// table that ranks by median: hiding it would hide the group, and marking it on the
+// front door only (where it started) left the same figure unmarked one click away.
+const SLAB = 10;
 
 // A day, from whatever the source happened to hand over. Arrow gives dates back as epoch
 // milliseconds; the manifest and the URL carry them as "YYYY-MM-DD". Both reach the same
@@ -1772,6 +1780,12 @@ function fillTable(el, table, {
       if (pret && (c === 'denumire_key' || c === 'mediana_ron')) {
         td.classList.add(c === 'denumire_key' ? 'c-produs' : 'c-mediana');
       }
+      if (pret && Number(row.n) < SLAB) {
+        // Greyed median, and a `*` on the product so the mark survives a phone's two-line
+        // row and a screen reader's linear read (design screen 03).
+        if (c === 'mediana_ron' || c === 'de_cate_ori') td.classList.add('slab');
+        if (c === 'denumire_key') td.append(' *');
+      }
       const extra = cellClass ? cellClass(row, c) : null;
       if (extra) td.classList.add(extra);
       if (numeric && !isLabel && money(c) && v !== null && v !== undefined) {
@@ -1789,6 +1803,17 @@ function fillTable(el, table, {
       td.dataset.label = '';
       td.textContent = act ? (act.cta || 'Fișă →') : '';
     }
+  }
+  // The explanation sits after the table's wrapper, once; a re-render replaces it.
+  const wrap = el.parentElement;
+  const prev = wrap && wrap.nextElementSibling;
+  if (prev && prev.classList.contains('nota-slab')) prev.remove();
+  if (wrap && pret && table.toArray().some((r) => Number(r.n) < SLAB)) {
+    const nota = document.createElement('p');
+    nota.className = 'nota-slab';
+    nota.textContent = `* Rapoartele în gri se sprijină pe mai puțin de ${SLAB} prețuri `
+      + 'și sunt doar orientative.';
+    wrap.after(nota);
   }
   return Math.min(table.numRows, maxRows);
 }
@@ -1954,10 +1979,8 @@ async function runPanorama() {
       // pack size to read the row, and the row needs it to open the right group.
       // A ratio of p90 to p10 over eight prices is two prices divided by each other.
       // Shown, because hiding it would hide the group, but greyed and explained.
-      const SLAB = 10;
       tabel(sec, preturi, {
         hide: ['cpv', 'marime_pachet', 'din', 'pana_la'],
-        cellClass: (row, c) => (c === 'de_cate_ori' && Number(row.n) < SLAB ? 'slab' : null),
         onRow: (row) => ({
           title: 'Vezi achizițiile din spatele acestei mediane',
           cta: 'Detalii →',
@@ -1971,13 +1994,6 @@ async function runPanorama() {
           },
         }),
       });
-      if (preturi.toArray().some((r) => Number(r.n) < SLAB)) {
-        const nota = document.createElement('p');
-        nota.className = 'nota-slab';
-        nota.textContent = `Rapoartele în gri se sprijină pe mai puțin de ${SLAB} prețuri `
-          + 'și sunt doar orientative.';
-        sec.append(nota);
-      }
     }
     catre(sec, `Toate cele ${Number(p.randuri).toLocaleString('ro-RO')} de linii de preț →`,
           () => selectTab('preturi'));
@@ -1994,22 +2010,51 @@ async function runPanorama() {
       'Fiecare semnal are un temei legal citat și înseamnă „merită o privire”, niciodată '
       + '„este ilegal”. Multe au explicații perfect legale.',
     );
-    const ul = document.createElement('ul');
-    ul.className = 'legend';
-    ul.style.flexDirection = 'column';
-    ul.style.gap = '.3rem';
+    // One table, three columns: the signal (a button that opens it), its count, and a
+    // bar proportional to the count. The same rows serve as the chart and as the table,
+    // so a screen reader and a sighted reader get the same thing (design screen 01).
+    const most = Math.max(1, ...semnale.map((ind) => Number(ind.rows || 0)));
+    const w = document.createElement('div');
+    w.className = 'wrap';
+    const t = document.createElement('table');
+    t.className = 'tbl semnale-tbl';
+    const head = t.createTHead().insertRow();
+    for (const h of ['Semnal', 'Temei legal', 'Achiziții', '']) {
+      const th = document.createElement('th');
+      th.textContent = h;
+      head.append(th);
+    }
+    const body = t.createTBody();
     for (const ind of semnale) {
-      const li = document.createElement('li');
+      const n = Number(ind.rows || 0);
+      const tr = body.insertRow();
       const b = document.createElement('button');
       b.type = 'button';
       b.style.cssText = 'cursor:pointer;color:var(--accent);background:none;border:none;'
                       + 'padding:0;font:inherit;text-align:left';
-      b.textContent = `${ind.nume || ind.id} — ${Number(ind.rows || 0).toLocaleString('ro-RO')}`;
+      b.textContent = ind.nume || ind.id;
       b.onclick = () => selectTab('indicatori', ind);
-      li.append(b);
-      ul.append(li);
+      tr.insertCell().append(b);
+      // The legal basis on every row, not only on the selected signal (design screen 04):
+      // a signal without one would be an accusation, and the row says so with a dash.
+      const temei = tr.insertCell();
+      temei.textContent = ind.temei || '—';
+      temei.className = 'temei';
+      const num = tr.insertCell();
+      num.className = 'num';
+      num.textContent = n.toLocaleString('ro-RO');
+      const bar = document.createElement('span');
+      bar.className = 'semnal-bar';
+      bar.style.width = `${Math.max(2, Math.round((n / most) * 100))}%`;
+      bar.setAttribute('aria-hidden', 'true');
+      tr.insertCell().append(bar);
     }
-    sec.append(ul);
+    w.append(t);
+    sec.append(w);
+    const legend = document.createElement('p');
+    legend.className = 'legend nota-legenda';
+    legend.textContent = 'Lungimea barei: numărul de achiziții marcate de semnal, față de semnalul cu cele mai multe.';
+    sec.append(legend);
   }
 
   // ---- 3. who buys ----------------------------------------------------------
@@ -2260,6 +2305,9 @@ function render(table) {
       return;
     }
     status('Niciun rezultat. Relaxați filtrele.');
+    if ($('an').value) $('status').append(' ', Object.assign(document.createElement('button'), {
+      type: 'button', className: 'civic-button', textContent: 'Toți anii', // screen 02: empty year
+      onclick: () => { $('an').value = ''; pagina = 0; run(); } }));
     // "No results" is the wrong answer when the name is simply on the other side of the
     // transaction. Searching DEDEMAN — a supplier — lands on the buyers view and reports
     // nothing, which reads as "not in the data" rather than "wrong aspect". Grouping the
@@ -2996,12 +3044,22 @@ function selectTab(key, ind) {
   ].filter(([, d]) => d);
   const ziua = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString('ro-RO',
     { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-  const laZi = zile.length
-    ? `date până la ${ziua(zile.map(([, d]) => d).sort().at(-1))}` : '';
-  $('la-zi').textContent = laZi ? `${laZi[0].toUpperCase()}${laZi.slice(1)}.` : '';
+  const newest = zile.length ? zile.map(([, d]) => d).sort().at(-1) : null;
+  // The age in days, said plainly once the newest day is more than a week old: while the
+  // collection is held, the status badge stays true and the line says how old they are
+  // (UX guidelines §7, design screen 03).
+  const ageDays = newest
+    ? Math.floor((Date.now() - Date.parse(`${newest}T00:00:00Z`)) / 86400000) : 0;
+  const laZi = newest
+    ? `date până la ${ziua(newest)}${ageDays > 7 ? ` (acum ${ageDays} de zile)` : ''}` : '';
+  // One provenance line, said once: the source, the newest collected day, the method.
+  // The footer keeps the count only (D-6 in docs/ux-guidelines.md).
+  const metodologie = document.createElement('a');
+  metodologie.href = 'metodologie.html';
+  metodologie.textContent = 'Metodologie';
+  $('la-zi').replaceChildren('Date: data.gov.ro, exporturile ANAP/ADR' + (laZi ? ` · ${laZi}` : '') + ' · ', metodologie);
   $('la-zi').title = zile.map(([s, d]) => `${s}: ${ziua(d)}`).join(' · ');
-  $('meta').textContent = `${nf(ac.achizitii_directe_randuri)} achiziții directe`
-    + (laZi ? ` · ${laZi}` : '');
+  $('meta').textContent = `${nf(ac.achizitii_directe_randuri)} achiziții directe`;
 
   // Six plain tabs instead of seventeen. The eight indicators were shown as bare ids
   // ("dependenta-01"), which tells a reader nothing and pushed the table below the fold
