@@ -120,7 +120,7 @@ From the live review (2026-10-14) and a code audit of `site/index.html`; screens
 - **D-1** No family bar back to the hub; the name differs between the hub ("Open
   Procurement") and the site („Achiziții publice din România”). Needs the hub URL and a
   naming decision from the owner.
-- **D-2** No status badge from the vocabulary in §7.
+- ~~**D-2** No status badge from the vocabulary in §7.~~ Fixed by OP-15.
 - **D-3** Table date columns show ISO dates (`toISOString`) to readers; switch the displayed form to `ro-RO`, keep ISO in CSV and URL.
 - ~~**D-4** Error states have no retry action.~~ Fixed by OP-12.
 - **D-5** Thin-sample warnings are not yet shown on every view that ranks by median.
