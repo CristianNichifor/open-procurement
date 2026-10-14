@@ -2,7 +2,7 @@
 # Fetch the published bundle into site/data, unless it is already there.
 #
 # The derived aggregates are no longer committed — see docs/storage.md. Three workflows need
-# them present: `pages.yml` deploys them, `tests.yml` asserts things about them, and
+# them present: `deploy-pages-cloudflare.yml` deploys them, `tests.yml` asserts things about them, and
 # `browser.yml` serves site/ to a real browser that reads the Parquet over HTTP. A fetch
 # written three times is a fetch that drifts, so it lives here.
 #
