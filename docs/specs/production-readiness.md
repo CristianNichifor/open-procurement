@@ -160,10 +160,33 @@ Test: `tests/browser/ux.spec.js`.
 
 Test: `tests/browser/ux.spec.js`.
 
-### Not done in this theme
+## Theme D: search and phone layout
 
-- Prebuilt entity-name typeahead that works before the engine loads, and two-line mobile
-  price rows with a p10–p90 bar: larger changes, left for a later theme.
+### OP-9 Entity typeahead before the engine loads (todo)
+
+- Given a published bundle, when `achizitii publish` runs or
+  `python scripts/build_entity_index.py` is run on an existing `site/data`, then
+  `site/data/entitati.json` holds the buyers and suppliers with the largest totals as
+  compact `[denumire, cui, tip]` rows, at most 2 500 of each and under 300 kB.
+- Given a supplier that is a natural person (a fiscal code shaped like a CNP, or a name
+  marking a sole trader: PFA, II, IF, „persoană fizică”, „cabinet individual”), then it is
+  left out, in line with `gdpr.py`: the index lists organisations, never people.
+- Given the front page before DuckDB-Wasm has loaded, when a reader types two or more
+  letters into the search box, then up to eight matching names appear in a listbox,
+  matched without regard to case or diacritics; arrow keys move through them, Enter or a
+  click opens that organisation's file by its CUI, and Escape closes the list.
+- Given a bundle without `entitati.json`, then the search box works as before.
+
+Test: `tests/test_entity_index.py`, `tests/browser/typeahead.spec.js`.
+
+### OP-10 Two-line price rows on a phone (todo)
+
+- Given a price table at 480 px or narrower, then each row shows two lines: the product
+  with its median, then a bar spanning p10–p90 with its two values, instead of a card of
+  seven labelled lines.
+- Given a wider screen, then the table is unchanged.
+
+Test: `tests/browser/mobile-prices.spec.js` at 390 px.
 
 ## Workflow-only (diff in the PR body for the maintainer)
 
