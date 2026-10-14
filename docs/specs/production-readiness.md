@@ -248,7 +248,7 @@ Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it
 
 Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
 
-### OP-15 Status badge from the vocabulary (done)
+### OP-26 Status badge from the vocabulary (done)
 
 - Given the front door, then exactly one badge under the H1 carries one of „Date reale”,
   „Date demonstrative”, „Prototip”, „Arhivat” (UX guidelines §7); it says „Date reale”,
