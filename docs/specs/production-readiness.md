@@ -262,6 +262,37 @@ mockups is agent-written: **needs human review**.
   pe grup” instead of „n minim”. Closes D-7. Agent-written: needs human review.
 
 Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
+### OP-18 Family bar on the static pages (done)
+
+- Given `metodologie.html`, `replica.html` and `privacy.html`, when the page is read, then
+  the first thing in the `<header>` is a family bar (civic-ui `FamilyBar`, native markup):
+  a link „Proiecte civice” to `https://projects.cristian-nichifor.com/`, the tool name
+  „Achiziții publice din România” linking to `./`, the status badge „Date reale” from the
+  §7 vocabulary and the RO/EN toggle, with every target at least 44 px tall.
+- Given `scripts/build_pages.py`, when it runs, then the committed pages equal its output
+  (OP-5 still holds) and `site/index.html` is left unchanged.
+- The front page's family bar (the other half of D-1) is a separate item: `site/index.html`
+  is being edited by other open PRs. Hub address and names come from the civic-ui naming
+  registry (`docs/ux-guidelines.md` §9 on civic-ui `dev`).
+
+Test: `tests/test_site_pages.py` („family bar”). Romanian strings agent-written: **needs
+human review**.
+
+### OP-15 Provenance line and contents on the static pages (done)
+
+- Given `metodologie.html`, `replica.html` and `privacy.html`, when either language is
+  shown, then directly under the H1 there is one provenance line „Date: data.gov.ro,
+  exporturile trimestriale ANAP/ADR, 2016–2026” followed by links to the data, the
+  methodology and the right of reply (the current page marked `aria-current`), as the
+  page anatomy in `docs/ux-guidelines.md` §2 and the methodology screen in
+  `docs/design/README.md` require.
+- Given `metodologie.html`, then each language's article has a table of contents
+  („Cuprins” / „Contents”) whose links point at ids that exist on the page's `h2`s.
+- Given `scripts/build_pages.py`, then the committed pages equal its output and
+  `site/index.html` is unchanged.
+
+Test: `tests/test_site_pages.py` („provenance”, „contents”). Romanian strings
+agent-written: **needs human review**.
 
 ## Workflow-only (diff in the PR body for the maintainer)
 
