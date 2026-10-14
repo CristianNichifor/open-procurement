@@ -65,6 +65,16 @@ English only) is agent-written: **needs human review**.
 
 Test: `tests/browser/cdn-fallback.spec.js` (route `**/cdn.jsdelivr.net/**` aborted).
 
+### OP-24 Spec items have unique ids and a named test (done)
+
+- Given `docs/specs/production-readiness.md`, when its `###` headings are read, then each
+  is `ID title (status)` with a status from the list above, no id is used twice (the
+  doubled `OP-9` from before this guard is the one tolerated exception) and every item
+  has a `Test:` line, so parallel sessions cannot land the same number twice as happened
+  with OP-12 on 2026-10-14.
+
+Test: `tests/test_spec_ids.py`.
+
 ### OP-7 Content Security Policy and accessibility scan (done)
 
 - Given each page, then a `<meta http-equiv="Content-Security-Policy">` allows only self,
