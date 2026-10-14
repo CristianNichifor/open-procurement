@@ -247,6 +247,15 @@ Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it
   pe grup” instead of „n minim”. Closes D-7. Agent-written: needs human review.
 
 Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
+### OP-21 A natural person never gets a file (done)
+
+- Given the entity file, when the search term is a 13-digit code (CNP-shaped) or carries a
+  sole-trader marker (PFA, „persoană fizică”, „cabinet individual”, „întreprindere
+  individuală”), then the status line says natural persons have no file here and points
+  to the privacy page, and no query runs.
+
+Test: `tests/test_site_natural_person.py`; browser suite in CI. Romanian message is
+agent-written: **needs human review**.
 
 ## Workflow-only (diff in the PR body for the maintainer)
 
