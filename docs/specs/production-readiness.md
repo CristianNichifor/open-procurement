@@ -247,7 +247,7 @@ Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it
   pe grup” instead of „n minim”. Closes D-7. Agent-written: needs human review.
 
 Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
-### OP-18 Suggestions are touch targets (done)
+### OP-25 Suggestions are touch targets (done)
 
 - Given the typeahead listbox, then each suggestion row is at least 44 px tall with its
   text vertically centred (design screen 01 Home, acceptance), so a thumb can hit one
