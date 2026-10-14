@@ -339,6 +339,18 @@ review**. Closes D-2 in `docs/ux-guidelines.md`.
 Test: `tests/test_site_provenance.py`; `tests/browser/ux.spec.js` („data date shown”).
 Closes D-6 in `docs/ux-guidelines.md`.
 
+### OP-17 Thin groups marked on every median view (done)
+
+- Given any table whose rows carry a product, a median and the percentiles, when a group
+  rests on fewer than 10 prices, then its median cell is greyed (`td.slab`) and one note
+  under the table says the greyed figures are only indicative; the threshold is one
+  module-level constant shared with the front door; the product cell carries a `*`
+  (design screen 03), and the note begins with `*` so the mark is explained once.
+- Given a re-render of the same table (paging, sorting), then the note appears once.
+
+Test: `tests/test_site_thin.py`; `tests/browser/ux.spec.js` („thin groups marked”).
+Closes D-5 in `docs/ux-guidelines.md`.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.
