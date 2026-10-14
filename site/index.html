@@ -632,6 +632,21 @@ const status = (m) => { $('status').className = 'civic-loading'; $('status').tex
 // ran selectTab, which overwrote the loading message and left an empty table with no sign
 // that anything was still happening. The page looked broken precisely when it was busiest.
 let ready = false;
+// An error with nothing to do next is a dead end: a dropped connection mid-query left the
+// reader a sentence, and a reload as the only way out, which also lost the view.
+const retryButton = (retry) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'civic-button';
+  b.textContent = 'Reîncearcă';
+  b.onclick = retry;
+  return b;
+};
+const failed = (m, retry) => {
+  $('status').className = 'civic-error';
+  $('status').textContent = `${m} `;
+  $('status').append(retryButton(retry));
+};
 const booting = (m) => { $('status').className = 'civic-loading boot'; $('status').textContent = m; };
 
 // Placeholder rows, so the table area reads as "filling in" rather than "empty".
@@ -2759,7 +2774,7 @@ async function run() {
     try {
       await runPanorama();
     } catch (err) {
-      status(`Eroare: ${err.message}`);
+      failed(`Eroare: ${err.message}`, run);
       console.error(err);
     } finally {
       makeScrollableRegionsFocusable();
@@ -2771,7 +2786,7 @@ async function run() {
     try {
       await runDosar();
     } catch (err) {
-      status(`Eroare: ${err.message}`);
+      failed(`Eroare: ${err.message}`, run);
       console.error(err);
     } finally {
       makeScrollableRegionsFocusable();
@@ -2784,7 +2799,7 @@ async function run() {
   try {
     render(await conn.query(sql));
   } catch (err) {
-    status(`Eroare: ${err.message}`);
+    failed(`Eroare: ${err.message}`, run);
     console.error(err);
   } finally {
     makeScrollableRegionsFocusable();
@@ -3099,6 +3114,7 @@ function selectTab(key, ind) {
       + `Fișierele lui vin de la ${ENGINE_HOST}: dacă rețeaua sau o extensie a browserului `
       + `blochează acest domeniu, filtrele și căutarea nu sunt disponibile.${local}`
       + (panoramaData ? ' Panorama de mai jos este calculată dinainte și este completă.' : '');
+    $('status').append(' ', retryButton(() => location.reload()));
   }
 })();
 
