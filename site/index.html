@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-AWUZCNTi9av+tESO5TiaW28KmnXTnde+WKnub05jRfY=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-EXF5hGY8kHOnSDsxl20WhMzqZMQPlehU1U01H0jrIOc=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -2984,7 +2984,7 @@ function selectTab(key, ind) {
     { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
   const newest = zile.length ? zile.map(([, d]) => d).sort().at(-1) : null;
   // The age in days, said plainly once the newest day is more than a week old: while the
-  // collection is held, "Date reale" stays true and the line says how old they are
+  // collection is held, the status badge stays true and the line says how old they are
   // (UX guidelines §7, design screen 03).
   const ageDays = newest
     ? Math.floor((Date.now() - Date.parse(`${newest}T00:00:00Z`)) / 86400000) : 0;
