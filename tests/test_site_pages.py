@@ -5,6 +5,7 @@ site is plain static files with no build step, so this test is what keeps them e
 from __future__ import annotations
 
 import importlib.util
+import re
 from pathlib import Path
 
 import pytest
@@ -45,3 +46,34 @@ def test_the_toggle_script_sets_the_document_language() -> None:
     assert "document.documentElement.lang" in js
     assert "aria-pressed" in js
     assert "lang=en" in js or "'lang'" in js, "the choice must survive a reload"
+
+
+# OP-15: one provenance line under the H1, and a table of contents on the long page.
+STATIC_PAGES = ("metodologie.html", "replica.html", "privacy.html")
+
+
+def _articles(name: str) -> list[str]:
+    html = (SITE / name).read_text(encoding="utf-8")
+    return re.findall(r"<article [^>]*>(.*?)</article>", html, flags=re.DOTALL)
+
+
+def test_static_pages_carry_a_provenance_line_under_the_h1() -> None:
+    for name in STATIC_PAGES:
+        for article in _articles(name):
+            after_h1 = article.split("</h1>", 1)[1].lstrip()
+            assert after_h1.startswith('<p class="provenance">'), name
+            line = after_h1.split("</p>", 1)[0]
+            assert "data.gov.ro" in line and "ANAP/ADR" in line, name
+            for target in ("./", "metodologie.html", "replica.html"):
+                assert f'href="{target}"' in line, (name, target)
+            if name != "privacy.html":  # the privacy page is not one of the three links
+                assert f'href="{name}" aria-current="page"' in line, name
+
+
+def test_the_methodology_page_has_a_table_of_contents() -> None:
+    for article in _articles("metodologie.html"):
+        assert '<nav class="toc"' in article
+        targets = re.findall(r'<nav class="toc".*?</nav>', article, flags=re.DOTALL)[0]
+        ids = set(re.findall(r'<h2 id="([^"]+)"', article))
+        links = re.findall(r'href="#([^"]+)"', targets)
+        assert links and set(links) <= ids, set(links) - ids
