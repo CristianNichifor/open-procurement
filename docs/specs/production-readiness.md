@@ -359,6 +359,16 @@ Closes D-5 in `docs/ux-guidelines.md`.
 
 Test: `tests/test_site_touch.py`; `tests/browser/typeahead.spec.js` drives the listbox.
 
+### OP-19 Signals as labelled bars, same rows as a table (done)
+
+- Given the front door's „Ce merită verificat” block, then the signals are one table:
+  the signal (a button that opens it), its legal basis (design screen 04; a dash when
+  the manifest carries none), its count, and a bar whose width is the count relative to
+  the largest; a legend line under it says what the bar measures.
+
+Test: `tests/test_site_signals.py`; `tests/browser/ux.spec.js` (front door) in CI.
+Romanian legend text is agent-written: **needs human review**.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.

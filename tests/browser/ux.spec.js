@@ -66,8 +66,9 @@ test('clickable rows carry a visible cue', async ({ page }) => {
 test('the front door: no stray bullets, thin groups marked, data date shown', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#panorama .pan').first()).toBeVisible();
-  expect(await page.locator('#panorama ul.legend').first()
-    .evaluate(el => getComputedStyle(el).listStyleType)).toBe('none');
+  // No stray bullets: whatever lists the panorama still draws carry no markers.
+  expect(await page.locator('#panorama ul').evaluateAll(els =>
+    els.map(el => getComputedStyle(el).listStyleType).filter(t => t !== 'none'))).toEqual([]);
   const n = await page.evaluate(async () =>
     (await (await fetch('data/panorama.json')).json()).preturi.map(r => r.n));
   if (n.some(x => x < 10)) {
