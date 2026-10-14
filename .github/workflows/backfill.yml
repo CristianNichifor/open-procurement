@@ -49,7 +49,10 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
+  # The collected days go onto a data/backfill-* branch with a pull request into dev: main and
+  # dev take changes by pull request only (rulesets cnw-production-gate, cnw-integration-gate).
   contents: write
+  pull-requests: write
 
 jobs:
   backfill:
@@ -58,9 +61,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # A shallow clone cannot be rebased onto a moved main, and this job pushes
-          # once per day collected.
+          # The data branch is cut from dev, which a shallow clone of main does not hold.
           fetch-depth: 0
+
+      # The authority lookup cache (data/autoritati.parquet) is only worth keeping if it
+      # survives the job, so the next dispatch starts warm. *.parquet is gitignored, so it
+      # travels in the Actions cache, not in git.
+      - name: Restore the authority cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/autoritati.parquet
+          key: autoritati-${{ github.run_id }}
+          restore-keys: autoritati-
 
       - uses: actions/setup-python@v5
         with:
@@ -74,10 +86,23 @@ jobs:
           START: ${{ inputs.start }}
           END: ${{ inputs.end }}
           BUDGET: ${{ inputs.budget_minutes }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Days are committed on a branch cut from dev, in a second worktree, so the code that
+          # runs stays the checked-out ref; a pull request carries the branch into dev and the
+          # dev -> main promotion takes it on. Days already merged into dev are copied into this
+          # tree first, so archived_ids() skips them on a re-run.
+          BRANCH="data/backfill-$START-$END-run${{ github.run_id }}"
+          DATA_TREE="$RUNNER_TEMP/data-branch"
+          git fetch --quiet origin dev
+          git worktree add --quiet -B "$BRANCH" "$DATA_TREE" origin/dev
+          mkdir -p site/data/preturi
+          rsync -a "$DATA_TREE/site/data/preturi/" site/data/preturi/
+          pr_open=
 
           deadline=$(( $(date +%s) + BUDGET * 60 ))
           day="$START"
@@ -94,20 +119,25 @@ jobs:
             # One failing day must not abandon the rest of the range.
             if achizitii seap --start "$day" --end "$day"; then
               achizitii publish --only preturi
-              git add site/data
-              # The authority cache rides along deliberately: it is only worth keeping
-              # if it survives the job, and the next dispatch starts warm because of it.
-              # Guarded because it does not exist until the first successful save, and
-              # `git add` on a missing path is fatal under `set -e`.
-              if [ -f data/autoritati.parquet ]; then
-                git add data/autoritati.parquet
-              fi
-              if ! git diff --cached --quiet; then
-                git commit -q -m "data: unit prices for $day"
-                for attempt in 1 2 3; do
-                  git pull --rebase --autostash origin main && git push && break
-                  echo "push attempt $attempt failed"; sleep 5
-                done
+              # Day files are append-only, so copying them over dev's adds and never rewrites.
+              rsync -a site/data/preturi/ "$DATA_TREE/site/data/preturi/"
+              git -C "$DATA_TREE" add site/data
+              if ! git -C "$DATA_TREE" diff --cached --quiet; then
+                git -C "$DATA_TREE" commit -q -m "data: unit prices for $day"
+                # Pushed after every day, so a job that hits the time limit loses nothing.
+                # The branch belongs to this run alone.
+                git -C "$DATA_TREE" push --quiet --force origin "$BRANCH"
+                if [ -z "$pr_open" ]; then
+                  if gh pr create --base dev --head "$BRANCH" --title "data: backfill unit prices $START to $END" \
+                      --body "Days collected by run ${{ github.run_id }} (\`backfill.yml\`); each day is one commit. Merge into dev; it reaches main with the next dev -> main promotion."; then
+                    :
+                  else
+                    # Needs "Allow GitHub Actions to create and approve pull requests" in the
+                    # repository settings. The branch is pushed either way.
+                    echo "::warning::could not open the pull request; open it from $BRANCH by hand: ${{ github.server_url }}/${{ github.repository }}/compare/dev...$BRANCH"
+                  fi
+                  pr_open=1
+                fi
                 collected=$((collected + 1))
               else
                 echo "nothing new for $day"
@@ -120,7 +150,14 @@ jobs:
             day=$(date -d "$day + 1 day" +%F)
           done
 
-          echo "Collected $collected new day(s)." >> "$GITHUB_STEP_SUMMARY"
+          echo "Collected $collected new day(s) on \`$BRANCH\`." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save the authority cache
+        if: always() && hashFiles('data/autoritati.parquet') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: data/autoritati.parquet
+          key: autoritati-${{ github.run_id }}
 
       - name: Report what the archive now holds
         if: always()
