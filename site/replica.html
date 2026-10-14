@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drept la replică — Open Procurement</title>
+<meta name="description" content="Cum cereți o corectare a datelor sau publicarea unui răspuns la o înregistrare din Open Procurement.">
+<link rel="canonical" href="https://projects.cristian-nichifor.com/open-procurement/replica.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23123a6b'/%3E%3Crect x='3.5' y='8.5' width='2.5' height='4.5' fill='%23fff'/%3E%3Crect x='6.75' y='5.5' width='2.5' height='7.5' fill='%23fff'/%3E%3Crect x='10' y='3' width='2.5' height='10' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/civic-ui/native.css">
+<link rel="stylesheet" href="pages.css">
+<script src="lang.js" defer></script>
+<noscript><style>[data-lang] { display: revert !important; }</style></noscript>
+</head>
+<body data-title-ro="Drept la replică — Open Procurement" data-title-en="Right of reply — Open Procurement">
+<header class="page-head">
+  <a class="home" href="./">Open Procurement</a>
+  <div class="lang-toggle" role="group" aria-label="Limba / Language">
+    <button type="button" data-set-lang="ro" lang="ro" aria-pressed="true">RO</button>
+    <button type="button" data-set-lang="en" lang="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+<main>
+<article data-lang="ro" lang="ro">
+<h1>Corectări și drept la replică</h1>
+<h3>Ce publicăm și ce nu publicăm</h3>
+<p>Acest proiect publică date despre achiziții publice preluate din surse oficiale
+(SEAP / e-licitatie.ro și data.gov.ro), împreună cu <strong>indicatori</strong> calculați din ele.</p>
+<p>Un indicator semnalează un <strong>tipar care merită verificat</strong>. Nu este o acuzație, nu
+constată o încălcare a legii și nu stabilește vinovăția nimănui. Fiecare indicator are
+o bază legală declarată și explicații despre ce nu poate demonstra — vezi
+<a href="metodologie.html"><code>METHODOLOGY.md</code></a>.</p>
+<p>Fiecare tipar semnalat aici are explicații nevinovate plauzibile. O concentrare a
+valorilor sub un plafon poate reflecta un buget intern real. O procedură fără anunț
+prealabil este legală în situațiile prevăzute de art. 104. O pondere de 90% către un
+singur furnizor poate însemna că există o singură firmă calificată în zonă.</p>
+<h3>Cine poate cere o corectare</h3>
+<p>Oricine. Nu este nevoie să fiți parte în achiziția respectivă.</p>
+<p>Autoritățile contractante și operatorii economici numiți în date au, în plus, <strong>drept
+la replică</strong>: dacă ne semnalați că o interpretare este greșită sau incompletă, publicăm
+poziția dumneavoastră alături de înregistrarea contestată.</p>
+<h3>Cum cereți o corectare</h3>
+<p>Deschideți un <em>issue</em> pe GitHub folosind unul dintre formulare:</p>
+<table>
+<thead>
+<tr>
+<th>Situație</th>
+<th>Formular</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>O înregistrare conține date greșite</td>
+<td><strong>Corectare date</strong></td>
+</tr>
+<tr>
+<td>Sunteți autoritate/ofertant și contestați o interpretare</td>
+<td><strong>Drept la replică</strong></td>
+</tr>
+<tr>
+<td>O problemă sistematică (o coloană, un an, un indicator)</td>
+<td><strong>Problemă de calitate a datelor</strong></td>
+</tr>
+</tbody>
+</table>
+<p>👉 <a href="https://github.com/CristianNichifor/open-procurement/issues/new/choose">https://github.com/CristianNichifor/open-procurement/issues/new/choose</a></p>
+<p>Dacă nu doriți să folosiți GitHub, scrieți la adresa din profilul de contact al
+depozitului. Vom deschide noi <em>issue</em>-ul în numele dumneavoastră, păstrând conținutul
+sesizării.</p>
+<h3>Ce se întâmplă apoi</h3>
+<ol>
+<li><strong>Confirmare</strong> — confirmăm primirea și înregistrăm sesizarea public.</li>
+<li><strong>Verificare</strong> — comparăm înregistrarea noastră cu sursa oficială. Fiecare rând
+   păstrează <code>ocid</code>, fișierul-sursă și versiunea de procesare (<code>parse_version</code>), deci
+   putem reconstitui exact de unde provine o cifră.</li>
+<li><strong>Rezultat</strong> — una dintre:</li>
+<li><strong>Eroare la noi</strong> → corectăm <em>în pipeline</em>, nu doar în fișierul publicat, astfel
+     încât corectura să reziste la regenerare. Se consemnează în <code>CHANGELOG.md</code>.</li>
+<li><strong>Eroare în sursa oficială</strong> → marcăm înregistrarea, publicăm sesizarea și
+     semnalăm problema publicatorului (ANAP / ADR).</li>
+<li><strong>Datele sunt corecte, interpretarea este contestată</strong> → publicăm replica
+     dumneavoastră alături de înregistrare. Nu ștergem date publice corecte.</li>
+</ol>
+<h3>Ce facem și ce nu facem</h3>
+<p><strong>Facem:</strong>
+- Corectăm erori de procesare, oricât de mici.
+- Publicăm replica oricărei entități numite, needitată pe fond.
+- Marcăm vizibil înregistrările contestate.
+- Excludem din statistici rândurile pe care nu le putem verifica.</p>
+<p><strong>Nu facem:</strong>
+- Nu ștergem date publice corecte pentru că sunt incomode.
+- Nu lăsăm o cifră contestată fără mențiune.
+- Nu publicăm date cu caracter personal. Numele, adresele de e-mail și telefoanele
+  persoanelor de contact sunt eliminate înainte de orice publicare.</p>
+<h3>Termene</h3>
+<p>Ne angajăm la un răspuns inițial în <strong>5 zile lucrătoare</strong> și la o soluționare în
+<strong>30 de zile</strong>. Acesta este un proiect voluntar; dacă termenele nu sunt respectate,
+insistați în <em>issue</em>.</p>
+</article>
+<article data-lang="en" lang="en">
+<h1>Corrections and right of reply</h1>
+<h3>What we publish</h3>
+<p>Procurement data from official sources (SEAP / e-licitatie.ro and data.gov.ro), plus
+<strong>indicators</strong> computed from it.</p>
+<p>An indicator flags a <strong>pattern that warrants review</strong>. It is not an accusation, does not
+establish a breach of law, and does not determine anyone's culpability. Every indicator
+declares its legal basis and its limits — see <a href="metodologie.html"><code>METHODOLOGY.md</code></a>.</p>
+<p>Every pattern flagged here has plausible innocent explanations, which are documented
+alongside each indicator.</p>
+<h3>Who may request a correction</h3>
+<p>Anyone. You do not need to be a party to the procurement.</p>
+<p>Contracting authorities and suppliers named in the data additionally have a <strong>right of
+reply</strong>: tell us an interpretation is wrong or incomplete and we publish your position
+next to the record.</p>
+<h3>How</h3>
+<p>Open a GitHub issue using one of the templates — data correction, right of reply, or
+data-quality problem:</p>
+<p>👉 <a href="https://github.com/CristianNichifor/open-procurement/issues/new/choose">https://github.com/CristianNichifor/open-procurement/issues/new/choose</a></p>
+<p>If you would rather not use GitHub, write to the contact address on the repository
+profile and we will file it on your behalf, preserving your wording.</p>
+<h3>What happens</h3>
+<ol>
+<li><strong>Acknowledge</strong> — receipt confirmed and logged publicly.</li>
+<li><strong>Verify</strong> — our record is compared against the official source. Every row keeps its
+   <code>ocid</code>, source file and <code>parse_version</code>, so any figure can be traced to its origin.</li>
+<li><strong>Outcome</strong> — one of:</li>
+<li><strong>Our error</strong> → fixed <em>in the pipeline</em>, not just the published file, so the fix
+     survives regeneration. Logged in <code>CHANGELOG.md</code>.</li>
+<li><strong>Source error</strong> → the record is flagged, your report published, and the issue
+     raised with the publisher (ANAP / ADR).</li>
+<li><strong>Data correct, interpretation disputed</strong> → your reply is published alongside the
+     record. We do not remove accurate public data.</li>
+</ol>
+<h3>What we will and will not do</h3>
+<p><strong>Will:</strong> correct processing errors however small; publish any named entity's reply
+unedited in substance; visibly mark disputed records; exclude unverifiable rows from
+statistics.</p>
+<p><strong>Will not:</strong> remove accurate public data because it is unwelcome; leave a disputed
+figure unannotated; publish personal data — contact names, e-mail addresses and phone
+numbers are stripped before anything is published.</p>
+<h3>Timelines</h3>
+<p>Initial response within <strong>5 working days</strong>, resolution within <strong>30 days</strong>. This is a
+volunteer project; if those slip, press us in the issue.</p>
+</article>
+</main>
+<footer>
+  <nav aria-label="Pagini / Pages"><a href="./"><span data-lang="ro" lang="ro">Date</span><span data-lang="en" lang="en">Data</span></a> · <a href="metodologie.html"><span data-lang="ro" lang="ro">Metodologie</span><span data-lang="en" lang="en">Methodology</span></a> · <a href="replica.html" aria-current="page"><span data-lang="ro" lang="ro">Drept la replică</span><span data-lang="en" lang="en">Right of reply</span></a> · <a href="privacy.html"><span data-lang="ro" lang="ro">Confidențialitate</span><span data-lang="en" lang="en">Privacy</span></a> · <a href="https://github.com/CristianNichifor/open-procurement"><span data-lang="ro" lang="ro">Cod sursă</span><span data-lang="en" lang="en">Source code</span></a></nav>
+</footer>
+</body>
+</html>

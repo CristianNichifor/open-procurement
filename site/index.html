@@ -2,9 +2,23 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Hj04tM8lPigANyGv1rkwz9k6mw9bWvEAK2YEgP3I5Dc=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
+<meta name="description" content="Date deschise despre achizițiile publice din România: prețuri unitare comparabile, furnizori și autorități, interogabile direct în browser.">
+<link rel="canonical" href="https://projects.cristian-nichifor.com/open-procurement/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ro_RO">
+<meta property="og:site_name" content="Open Procurement">
+<meta property="og:title" content="Achiziții publice din România">
+<meta property="og:description" content="Prețuri unitare comparabile din achizițiile publice, interogabile în browser. Date deschise, sub CC BY 4.0.">
+<meta property="og:url" content="https://projects.cristian-nichifor.com/open-procurement/">
+<meta property="og:image" content="https://projects.cristian-nichifor.com/open-procurement/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Trei bare crescătoare pe albastru închis și titlul Achiziții publice din România">
+<meta name="twitter:card" content="summary_large_image">
 <!-- Inline, because every visit was issuing a request for /favicon.ico and collecting a
      404 — the only console error left on the published site. A data URI keeps the page a
      single file, which is what makes it servable from any static host without a build.
@@ -180,6 +194,23 @@
      23.2px of safe clickable space. Padding rather than a taller line, so the text keeps
      its rhythm. */
   .pan .legend li button { padding:.3rem 0; min-height:1.5rem; }
+  /* The front door's signal list is a .legend outside a chart, where the chart rule above
+     does not reach: it kept the browser's bullets, and a wrapped name hung under them. */
+  .pan ul.legend { list-style:none; padding:0; margin:.5rem 0 0; }
+  /* The front door's tables are six rows each and should fit without a sideways scroll;
+     their long one-word-per-line headers were what made them overflow. */
+  .pan th { white-space:normal; vertical-align:bottom; }
+  /* Pinned to the right edge, or on a table wider than its box the cue was the one cell
+     scrolled out of sight. It covers only the column the overflow already clips. */
+  td.cta { color:var(--accent); font-weight:600; text-align:right; position:sticky; right:0;
+           background:var(--paper); box-shadow:-6px 0 6px -6px var(--line); }
+  tr.drillable:hover td.cta, tr.drillable:focus-visible td.cta { background:var(--accent-soft); }
+  td.slab { color:var(--muted); font-style:italic; }
+  .nota-slab { color:var(--muted); font-size:.8rem; margin:.4rem 0 0; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+             overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+  .la-zi { color:var(--muted); font-size:.8rem; margin:-1rem 0 1.25rem; }
+  .la-zi:empty { display:none; }
   /* The swatch carries identity; the text stays in ink. A light categorical hue is
      illegible as label text on white. */
   .viz .legend i { width:.7rem; height:.7rem; border-radius:2px; flex:none; }
@@ -293,6 +324,17 @@
     .boot::before, .skeleton span { animation:none; }
   }
 
+  /* The phone tab row is 878px wide in a 390px screen and had no scrollbar, so nothing
+     said there were more tabs. Its edge fades where more is hidden; tabEdges() sets
+     --fade-l and --fade-r as it scrolls. */
+  @media (width <= 640px) {
+    .tabs { --fade-l:0px; --fade-r:2rem;
+      -webkit-mask-image:linear-gradient(to right, transparent, #000 var(--fade-l),
+        #000 calc(100% - var(--fade-r)), transparent);
+      mask-image:linear-gradient(to right, transparent, #000 var(--fade-l),
+        #000 calc(100% - var(--fade-r)), transparent); }
+  }
+
   /* On a 390px phone the eleven tabs wrapped onto FOUR rows, which together with the hero
      and the caveat pushed the table entirely below the fold — not one figure visible
      without scrolling, on a page whose whole purpose is the figures. One swipeable row
@@ -304,9 +346,9 @@
   @media (max-width: 640px) {
     body { padding:1.25rem .9rem 3rem; }
     .tabs { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
-            -webkit-overflow-scrolling:touch; }
+            -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; }
     .tabs::-webkit-scrollbar { display:none; }
-    .tabs button { white-space:nowrap; flex:none; }
+    .tabs button { white-space:nowrap; flex:none; scroll-snap-align:start; }
     .controls { gap:.5rem; }
     /* min-width:0 and a full-width control, or the select keeps its intrinsic width and
        pushes the whole page sideways — a flex item will not shrink below its content
@@ -344,6 +386,7 @@
     }
     /* A cell with nothing to say is noise on a card, where it costs a whole line. */
     .tbl td.empty { display:none; }
+    .tbl td.cta { position:static; box-shadow:none; justify-content:flex-end; }
     .tbl tr:last-child td { border-bottom:0; }
     /* Skeleton rows have no labels; keep them as plain bars while loading. */
     .tbl tr.skeleton td { display:block; text-align:left; }
@@ -369,8 +412,9 @@
 <main class="civic-scope">
   <h1>Achiziții publice din România</h1>
   <p class="sub" id="scale">Date deschise despre banii cheltuiți de instituțiile publice.</p>
+  <p class="la-zi" id="la-zi"></p>
 
-  <form class="hero" id="hero" onsubmit="return false">
+  <form class="hero" id="hero">
     <div class="civic-field">
       <input id="q" class="civic-input" autocomplete="off"
              aria-label="Caută o autoritate, o firmă, un CUI sau un produs"
@@ -389,8 +433,8 @@
     <p>Un total mare sau o poziție dominantă a unui furnizor pot avea explicații perfect
     legale. Sumele sunt nominale, fără ajustare la inflație, dacă nu alegeți un an de
     referință.
-    Vezi <a href="https://github.com/CristianNichifor/open-procurement/blob/main/METHODOLOGY.md">metodologia</a>
-    și <a href="https://github.com/CristianNichifor/open-procurement/blob/main/CORRECTIONS.md">dreptul la replică</a>.</p>
+    Vezi <a href="metodologie.html">metodologia</a>
+    și <a href="replica.html">dreptul la replică</a>.</p>
   </details>
 
   <nav class="tabs" id="tabs" role="tablist"></nav>
@@ -471,12 +515,77 @@
     Deschisă v1.0) · Publicate sub
     <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> ·
     <a href="https://github.com/CristianNichifor/open-procurement">Cod sursă</a> ·
+    <a href="privacy.html">Confidențialitate</a> ·
     <span id="meta"></span>
   </footer>
 </main>
 
 <script type="module">
-import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/+esm';
+// Imported dynamically, inside the boot block. A static import made the whole module
+// depend on cdn.jsdelivr.net: with that host blocked, not one line of this script ran and
+// the page stayed on its first spinner, although the front door needs no engine at all.
+// The engine stays on the CDN: its wasm is 35.7 MB, over the 25 MiB Pages file limit.
+const ENGINE_HOST = 'cdn.jsdelivr.net';
+const ENGINE_URL = `https://${ENGINE_HOST}/npm/@duckdb/duckdb-wasm@1.29.0/+esm`;
+
+// What the boot line says. Staged, because one sentence sitting still for seconds reads
+// as a broken page, and with the megabytes counted where they are actually paid:
+// instantiate is what downloads the engine (~7.5 s cold); bundle selection is ~170 ms
+// and claims no size. The browser caches the engine, so this is paid once per browser,
+// and saying so matters: a visitor who believes every page view costs 4 MB leaves.
+const boot = { stage: 'pregatire', loaded: 0, total: 0, queued: '', frontDoor: false, failed: false };
+const mb = (b) => (b / 1e6).toLocaleString('ro-RO', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+function showBoot() {
+  if (ready || boot.failed || !manifest) return;
+  const parts = [];
+  if (boot.stage === 'descarcare' && boot.total > 0) {
+    parts.push(`Motorul de interogare: ${mb(Math.min(boot.loaded, boot.total))} / `
+      + `${mb(boot.total)} MB (o singură dată, apoi rămâne în browser).`);
+  } else if (boot.stage === 'pornire') {
+    parts.push('Motorul de interogare pornește…');
+  } else {
+    parts.push(boot.frontDoor ? 'Se pregătesc filtrele și căutarea…' : 'Se pregătește motorul…');
+  }
+  if (boot.queued) parts.push(`Căutarea „${boot.queued}” pornește imediat ce motorul e gata.`);
+  else if (boot.frontDoor) parts.push('Panorama de mai jos este deja completă.');
+  booting(parts.join(' '));
+}
+function startEngine() {
+  return (async () => {
+    const duckdb = await import(ENGINE_URL);
+    const bundle = await duckdb.selectBundle(duckdb.getJsDelivrBundles());
+    const worker = await duckdb.createWorker(bundle.mainWorker);
+    boot.stage = 'descarcare';
+    showBoot();
+    const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING), worker);
+    await db.instantiate(bundle.mainModule, bundle.pthreadWorker, (p) => {
+      boot.loaded = p.bytesLoaded || 0;
+      boot.total = p.bytesTotal || 0;
+      showBoot();
+    });
+    boot.stage = 'pornire';
+    showBoot();
+    const c = await db.connect();
+    // Range requests let DuckDB read only the row groups a query needs, so the browser
+    // never downloads a whole file to answer a filtered question.
+    await c.query('SET enable_http_metadata_cache = true; SET http_keep_alive = true;');
+    return c;
+  })();
+}
+
+// A query that takes long says how long. "Se interoghează…" alone for 49 s, measured on
+// a cold search, is indistinguishable from a hang.
+let busySince = 0, busyTimer = null;
+function busy(m) {
+  status(m);
+  clearInterval(busyTimer);
+  busyTimer = setInterval(() => {
+    const el = $('status');
+    if (!el.textContent.startsWith(m)) { clearInterval(busyTimer); return; }
+    const s = Math.round((performance.now() - busySince) / 1000);
+    if (s >= 2) el.textContent = `${m} (${s} s)`;
+  }, 1000);
+}
 
 const $ = (id) => document.getElementById(id);
 const status = (m) => { $('status').className = 'civic-loading'; $('status').textContent = m; };
@@ -496,6 +605,23 @@ function skeleton() {
     '<tr class="skeleton">' + '<td><span></span></td>'.repeat(7) + '</tr>').join('');
 }
 const url = (f) => new URL(`data/${f}`, location.href).href;
+
+// Values the pipeline writes as codes, for SQL. A reader saw `plafon_acord_cadru` and
+// `dependenta-01` in the tables; they now see words. The CSV keeps the codes, because a
+// spreadsheet filter wants the stable value.
+const VALUE_LABELS = {
+  natura: {
+    contract: 'contract', contract_subsecvent: 'contract subsecvent',
+    plafon_acord_cadru: 'plafon acord-cadru', nedeterminat: 'nedeterminat',
+  },
+};
+function valueLabel(c, v) {
+  if (c === 'indicator') {
+    const ind = (manifest && manifest.indicatori || []).find((i) => i.id === v);
+    return ind && ind.nume ? ind.nume : v;
+  }
+  return (VALUE_LABELS[c] && VALUE_LABELS[c][v]) || v;
+}
 const lit = (s) => `'${String(s).replace(/'/g, "''")}'`;
 
 // Column names come from the Parquet schema, which is written for SQL, not for reading.
@@ -1482,7 +1608,7 @@ function chartFor(spec, table, maxRows = Infinity) {
 // header carried into each cell for the phone layout — has to hold in all of them. Two
 // copies of this would drift within a week.
 function fillTable(el, table, {
-  onRow = null, maxRows = Infinity, sortable = false, hide = [],
+  onRow = null, maxRows = Infinity, sortable = false, hide = [], cellClass = null,
 } = {}) {
   const head = el.tHead, body = el.tBodies[0];
   head.innerHTML = ''; body.innerHTML = '';
@@ -1531,6 +1657,16 @@ function fillTable(el, table, {
     }
     return th;
   }));
+  // The column that says a row opens something. Named for screen readers, blank to the
+  // eye: the cue in each row is the label.
+  if (onRow) {
+    const th = document.createElement('th');
+    const span = document.createElement('span');
+    span.className = 'sr-only';
+    span.textContent = 'Deschide';
+    th.append(span);
+    head.rows[0].append(th);
+  }
   // Sliced, because the query deliberately fetches one row more than the page shows —
   // that extra row is how the pager knows there is a next page, and it must never be
   // drawn.
@@ -1568,13 +1704,23 @@ function fillTable(el, table, {
         : typeof v === 'boolean' ? (v ? 'da' : 'nu')
         : dates.has(c) ? new Date(Number(v)).toISOString().slice(0, 10)
         : numeric && !isLabel && money(c) ? ron(v)
-        : numeric && !isLabel ? Number(v).toLocaleString('ro-RO') : String(v);
+        : numeric && !isLabel ? Number(v).toLocaleString('ro-RO') : valueLabel(c, String(v));
       if (numeric) td.className = 'num';
+      const extra = cellClass ? cellClass(row, c) : null;
+      if (extra) td.classList.add(extra);
       if (numeric && !isLabel && money(c) && v !== null && v !== undefined) {
         td.classList.add('money');
         // The exact figure is never destroyed, only folded away.
         td.title = `${Number(v).toLocaleString('ro-RO')} RON`;
       }
+    }
+    // A pointer cursor is invisible on a phone and hover never happens there, so a row
+    // that opens something said so to nobody. The cue is text, in the row itself.
+    if (onRow) {
+      const td = tr.insertCell();
+      td.className = 'cta';
+      td.dataset.label = '';
+      td.textContent = act ? (act.cta || 'Fișă →') : '';
     }
   }
   return Math.min(table.numRows, maxRows);
@@ -1709,10 +1855,15 @@ async function runPanorama() {
     if (preturi && preturi.numRows) {
       // The drill-down columns are selected but not shown: a reader does not need the
       // pack size to read the row, and the row needs it to open the right group.
+      // A ratio of p90 to p10 over eight prices is two prices divided by each other.
+      // Shown, because hiding it would hide the group, but greyed and explained.
+      const SLAB = 10;
       tabel(sec, preturi, {
         hide: ['cpv', 'marime_pachet', 'din', 'pana_la'],
+        cellClass: (row, c) => (c === 'de_cate_ori' && Number(row.n) < SLAB ? 'slab' : null),
         onRow: (row) => ({
           title: 'Vezi achizițiile din spatele acestei mediane',
+          cta: 'Detalii →',
           open: () => {
             drill = {
               cpv: row.cpv, denumire_key: row.denumire_key, um: row.um,
@@ -1723,6 +1874,13 @@ async function runPanorama() {
           },
         }),
       });
+      if (preturi.toArray().some((r) => Number(r.n) < SLAB)) {
+        const nota = document.createElement('p');
+        nota.className = 'nota-slab';
+        nota.textContent = `Rapoartele în gri se sprijină pe mai puțin de ${SLAB} prețuri `
+          + 'și sunt doar orientative.';
+        sec.append(nota);
+      }
     }
     catre(sec, `Toate cele ${Number(p.randuri).toLocaleString('ro-RO')} de linii de preț →`,
           () => selectTab('preturi'));
@@ -2028,6 +2186,7 @@ function render(table) {
     sortable: true,
     onRow: current !== 'preturi' ? null : (row) => ({
       title: 'Vezi achizițiile din spatele acestei mediane',
+      cta: 'Detalii →',
       open: () => {
         drill = {
           cpv: row.cpv, denumire_key: row.denumire_key, um: row.um,
@@ -2362,6 +2521,7 @@ async function runDosar() {
   }
   // A name may mean several organisations. Resolve it to one before claiming to be a
   // file about one, or the heading names a body whose figures include other bodies.
+  busy(`Se caută „${term}”: identificare…`);
   const subject = await disambiguate(term);
   if (subject === null) return;   // a chooser was drawn instead of a file
 
@@ -2378,9 +2538,12 @@ async function runDosar() {
 
   // Concurrently. In sequence the file assembles a section at a time and the reader
   // watches it arrive in stages; the wait is now the slowest single query.
+  let gata = 0;
+  const pas = () => busy(`Se caută „${term}”: ${gata} din ${sqls.length} surse au răspuns…`);
+  pas();
   const tables = await Promise.all(
     // A section that fails must not take the file down with it — the others still answer.
-    sqls.map((q) => conn.query(q).catch(() => null)),
+    sqls.map((q) => conn.query(q).catch(() => null).finally(() => { gata += 1; pas(); })),
   );
   const by = {};
   secs.forEach((s, i) => { by[s.id] = tables[i]; });
@@ -2516,7 +2679,8 @@ async function run() {
   // read back, and that is what stops reading a hash from immediately rewriting it.
   syncUrl();
   $('run').disabled = true;
-  status('Se interoghează…');
+  busySince = performance.now();
+  busy('Se interoghează…');
   if (current === 'panorama') {
     try {
       await runPanorama();
@@ -2581,6 +2745,9 @@ function selectTab(key, ind) {
   // The table, the feed, the entity file and the front door are four alternatives for
   // the same slot; never two at once.
   $('wrap-out').hidden = isDosar || isFeed || isPan;
+  // The previous view's rows must not sit under the new view's name while its query
+  // runs: Sumar's table stayed on screen under "Prețuri unitare" for seconds.
+  if (!(isDosar || isFeed || isPan)) { skeleton(); $('grafic').textContent = ''; }
   if (!isFeed) $('flux').textContent = '';
   if (!isPan) $('panorama').textContent = '';
   if (isPan) { $('grafic').textContent = ''; $('pager').hidden = true; }
@@ -2608,6 +2775,7 @@ function selectTab(key, ind) {
           && !!(VIEWS[key] && VIEWS[key].group === ENTITY_GROUP));
     b.setAttribute('aria-selected', String(active));
   }
+  showSelectedTab();
   // Only the year-keyed views can be deflated; the price archive and the meetings
   // register are not organised by year.
   $('wrap-baza').style.display = VIEWS[key] && VIEWS[key].money ? '' : 'none';
@@ -2668,12 +2836,19 @@ function selectTab(key, ind) {
        'Fiecare rând înseamnă „merită verificat”, niciodată „este ilegal”.')
       + (uses.an ? '' : ' Acest indicator agregă pe toți anii, deci nu are filtru de an.')
     : VIEWS[key].note;
-  run();
+  // Returned so that a caller can wait for the draw; nobody else needs to.
+  return run();
 }
 
 (async () => {
   skeleton();
   booting('Se pregătește…');
+  // The engine first, before anything else is even asked for. It used to start only
+  // after the manifest and the front door had arrived; measured on the live site, Caută
+  // then stayed disabled for ~29 s of a cold load. Started here it downloads while the
+  // front door is fetched and drawn, and a search typed meanwhile waits for it.
+  const engine = startEngine();
+  engine.catch(() => {});   // reported below, where it is awaited
   try {
     manifest = await (await fetch(url('manifest.json'))).json();
   } catch {
@@ -2706,7 +2881,20 @@ function selectTab(key, ind) {
   how.className = 'how';
   how.textContent = 'Se interoghează direct în browser — nu există niciun server.';
   $('scale').append(how);
-  $('meta').textContent = `${nf(ac.achizitii_directe_randuri)} achiziții directe`;
+  // How recent the data is, said once at the top and once at the bottom. The newest
+  // collected day of any source; the title lists each one, because they differ.
+  const zile = [
+    ['prețuri unitare', manifest.preturi_unitare && manifest.preturi_unitare.pana_la],
+    ['registrul întâlnirilor', manifest.ruti && manifest.ruti.pana_la],
+  ].filter(([, d]) => d);
+  const ziua = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString('ro-RO',
+    { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const laZi = zile.length
+    ? `date până la ${ziua(zile.map(([, d]) => d).sort().at(-1))}` : '';
+  $('la-zi').textContent = laZi ? `${laZi[0].toUpperCase()}${laZi.slice(1)}.` : '';
+  $('la-zi').title = zile.map(([s, d]) => `${s}: ${ziua(d)}`).join(' · ');
+  $('meta').textContent = `${nf(ac.achizitii_directe_randuri)} achiziții directe`
+    + (laZi ? ` · ${laZi}` : '');
 
   // Six plain tabs instead of seventeen. The eight indicators were shown as bare ids
   // ("dependenta-01"), which tells a reader nothing and pushed the table below the fold
@@ -2786,44 +2974,81 @@ function selectTab(key, ind) {
     }
   }
 
+  // Search is usable from here on. Before the engine is up a search is queued, not lost.
+  $('run').disabled = false;
+  boot.frontDoor = earlyDrawn;
+  showBoot();
+
   try {
-    // Staged, because the alternative is one sentence sitting still for seconds. The
-    // stage boundaries are placed where the time actually goes, measured cold: bundle
-    // selection is ~170ms, instantiate is ~7.5s. Putting the size on the fast stage
-    // would be a progress bar that lies.
-    //
-    // The browser caches the engine, so this is paid once rather than per visit. Worth
-    // saying out loud: a visitor who believes every page view costs 4 MB leaves.
-    // With the front door already on screen the wording changes: nothing is missing, the
-    // filtering is not ready yet. The spinner still runs, because the tabs are disabled
-    // and a reader who clicks one deserves to know why.
-    booting(earlyDrawn ? 'Se pregătesc filtrele și căutarea…' : 'Se pregătește motorul…');
-    const bundle = await duckdb.selectBundle(duckdb.getJsDelivrBundles());
-    const worker = await duckdb.createWorker(bundle.mainWorker);
-    booting(earlyDrawn
-      ? 'Se descarcă motorul de interogare (~4 MB, o singură dată). Panorama de mai jos '
-        + 'este deja completă.'
-      : 'Se descarcă baza de date (~4 MB, o singură dată — apoi rămâne în browser)…');
-    const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING), worker);
-    await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-    conn = await db.connect();
-    // Range requests let DuckDB read only the row groups a query needs, so the browser
-    // never downloads a whole file to answer a filtered question.
-    await conn.query('SET enable_http_metadata_cache = true; SET http_keep_alive = true;');
+    conn = await engine;
     ready = true;
-    $('run').disabled = false;
     for (const b of $('tabs').children) b.disabled = false;
+    // A queued search is what the reader asked for last, so it wins over the address.
+    if (boot.queued) {
+      $('q').value = boot.queued;
+      boot.queued = '';
+      heroSearch();
     // A link decides what opens; the summary is only the fallback. Nothing before this
     // point could honour a hash — there was no engine to query with.
     // Already drawn from JSON, and the hash named nothing else — leave it alone rather
     // than redrawing an identical page.
-    if (!applyHash() && !earlyDrawn) goDefault();
+    } else if (!applyHash() && !earlyDrawn) goDefault();
     else if (earlyDrawn) status('');
   } catch (err) {
-    status(`Eroare la inițializare: ${err.message}. Servește folderul prin HTTP (nu file://).`);
+    boot.failed = true;
+    boot.queued = '';
+    $('run').disabled = true;   // nothing can answer a search now
     console.error(err);
+    // The front door was skipped because the address named another view. That view needs
+    // the engine, so show what can be shown — without rewriting the link the reader came
+    // with, which works again as soon as the engine can load. Drawn first and awaited,
+    // because finishing the front door clears the status line.
+    if (!earlyDrawn && manifest.panorama) {
+      try {
+        panoramaData = panoramaData
+          || await (await fetch(url(manifest.panorama.file))).json();
+        applying = true;
+        let drawn;
+        try { drawn = selectTab('panorama'); } finally { applying = false; }
+        await drawn;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    // Name the host. "Serve the folder over HTTP" was the only advice ever given, and on
+    // the published site — always HTTP — it sent readers chasing a problem they did not
+    // have, when the usual cause is a network or an extension blocking the CDN.
+    const local = location.protocol === 'file:'
+      ? ' Pagina trebuie servită prin HTTP, nu deschisă ca fișier (file://).' : '';
+    $('status').className = 'civic-error';
+    $('status').textContent = `Motorul de interogare nu a pornit (${err.message}). `
+      + `Fișierele lui vin de la ${ENGINE_HOST}: dacă rețeaua sau o extensie a browserului `
+      + `blochează acest domeniu, filtrele și căutarea nu sunt disponibile.${local}`
+      + (panoramaData ? ' Panorama de mai jos este calculată dinainte și este completă.' : '');
   }
 })();
+
+// On a phone the tab row scrolls sideways. Fade the edge where more tabs are hidden, and
+// keep the selected one on screen: a link to the last tab otherwise opened with its tab
+// scrolled out of sight. Horizontal only, so the page itself never jumps.
+function tabEdges() {
+  const el = $('tabs');
+  const more = el.scrollWidth - el.clientWidth;
+  el.style.setProperty('--fade-l', el.scrollLeft > 2 ? '2rem' : '0px');
+  el.style.setProperty('--fade-r', more > 2 && el.scrollLeft < more - 2 ? '2rem' : '0px');
+}
+function showSelectedTab() {
+  const el = $('tabs');
+  const sel = el.querySelector('[aria-selected="true"]');
+  if (sel && el.scrollWidth > el.clientWidth) {
+    const r = sel.getBoundingClientRect(), box = el.getBoundingClientRect();
+    if (r.left < box.left) el.scrollLeft -= box.left - r.left + 16;
+    else if (r.right > box.right) el.scrollLeft += r.right - box.right + 16;
+  }
+  tabEdges();
+}
+$('tabs').addEventListener('scroll', tabEdges, { passive: true });
+window.addEventListener('resize', tabEdges);
 
 // The hero search is the first thing anyone touches. On a view that cannot be filtered
 // by text — the yearly summary is 41 rows of year x category — typing into it used to do
@@ -2835,6 +3060,11 @@ function selectTab(key, ind) {
 const SEARCHABLE_FALLBACK = 'dosar';
 function heroSearch() {
   const term = $('q').value.trim();
+  if (!ready) {
+    // Queued, and said so. The boot block runs it the moment the engine is up.
+    if (term && !boot.failed) { boot.queued = term; showBoot(); }
+    return;
+  }
   const usable = current !== 'indicatori' && VIEWS[current] && VIEWS[current].search;
   if (term && !usable) {
     selectTab(SEARCHABLE_FALLBACK);
@@ -2857,6 +3087,9 @@ $('descarca').addEventListener('click', exportCsv);
 $('pag-prev').addEventListener('click', () => turnPage(-1));
 $('pag-next').addEventListener('click', () => turnPage(1));
 $('run').addEventListener('click', heroSearch);
+// Enter in the box would also submit the form and reload the page. An inline onsubmit attribute
+// used to stop that; the Content-Security-Policy now blocks inline handlers.
+$('hero').addEventListener('submit', (e) => e.preventDefault());
 $('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') heroSearch(); });
 // Through rerun(), not run(), because each of these changes the result set: staying on
 // page 4 while the thing being paged through is replaced shows the reader an arbitrary
