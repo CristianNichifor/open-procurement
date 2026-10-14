@@ -133,7 +133,8 @@ def test_the_hero_search_lands_on_the_file(source: str) -> None:
 def test_the_sections_are_queried_concurrently(source: str) -> None:
     """In sequence the file assembles a section at a time and the reader watches it
     arrive in stages."""
-    body = _body(source, "async function runDosar(")
+    # 4000: the natural-person guard (OP-21) and the index head (OP-22) sit above the queries.
+    body = _body(source, "async function runDosar(", 4000)
     assert "await Promise.all(" in body
     assert ".catch(() => null)" in body, (
         "one failing section must not take the whole file down; the others still answer"

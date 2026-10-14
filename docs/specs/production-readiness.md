@@ -387,6 +387,16 @@ Test: `tests/test_site_empty_year.py`; browser suite in CI.
 Test: `tests/test_site_natural_person.py`; browser suite in CI. Romanian message is
 agent-written: **needs human review**.
 
+### OP-22 Entity head before the engine (done)
+
+- Given a search term that matches one entry of `site/data/entitati.json` exactly (its
+  CUI, or its name without regard to case or diacritics), when the entity file opens, then
+  the H2 and CUI line are drawn from the index at once, before the engine answers; the
+  queried head replaces them.
+- Given no exact match, then nothing is drawn early and the file proceeds as before.
+
+Test: `tests/test_site_entity_head.py`; browser suite in CI.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.

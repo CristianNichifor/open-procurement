@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8tlP0CNpPHYmNCcKyTCLAG9Eh59CmS0dvD6hkRXaoiA=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-2UjtGlfSbuq8DXPLN9pI4iEsdJC/+w74j6UjUdwBeCY=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -2674,6 +2674,20 @@ async function runDosar() {
     status('Persoanele fizice nu au fișă aici: datele publicate le exclud (vezi Confidențialitate).');
     return;
   }
+  // The head from the prebuilt entity index, before the engine is ready (design screen
+  // 02): the reader sees whose file is opening while the first query runs. The queried
+  // head below replaces it.
+  const known = sugestii.lookup(term);
+  if (known) {
+    cap.hidden = false;
+    cap.textContent = '';
+    const h = document.createElement('h2');
+    h.textContent = String(known[1]);
+    const p = document.createElement('p');
+    p.className = 'cui';
+    p.textContent = `CUI ${known[2]} · se încarcă…`;
+    cap.append(h, p);
+  }
   // A name may mean several organisations. Resolve it to one before claiming to be a
   // file about one, or the heading names a body whose figures include other bodies.
   busy(`Se caută „${term}”: identificare…`);
@@ -3308,9 +3322,16 @@ const sugestii = (() => {
       close();
     }
   });
+  // One exact match for a typed CUI or name, for the entity file's head (screen 02).
+  const lookup = (term) => {
+    if (!index) return null;
+    const digits = term.replace(/^ro\s*/i, '').trim(), f = fold(term.trim());
+    return index.find((e) => (digits && String(e[2]) === digits) || e[0] === f) || null;
+  };
   // Enter on a highlighted suggestion opens it; with none highlighted, Enter searches the
   // words as typed. Returns whether it consumed the key.
   return {
+    lookup,
     pick() {
       if (box.hidden || active < 0) { close(); return false; }
       choose(active);
