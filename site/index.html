@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Hj04tM8lPigANyGv1rkwz9k6mw9bWvEAK2YEgP3I5Dc=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-CMQLjWpsv3wZeNK1z2mosGiM66ew20bmUxUlQOkY6Oc=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -2319,8 +2319,8 @@ async function suggestOtherAspect() {
 // returning to the previous view. For a page whose stated purpose is letting other
 // people check the figures, an uncitable finding is barely published.
 //
-// The state lives in the HASH, not the query string. This is served as static files from
-// GitHub Pages: a path or a query the server has never heard of returns 404, while
+// The state lives in the HASH, not the query string. This is served as static files with
+// no router: a path or a query the server has never heard of is not this page, while
 // everything after "#" never leaves the browser. It also means an old link degrades to
 // the summary rather than to an error.
 const URL_KEYS = ['v', 's', 'q', 'an', 'minn', 'baza', 'sort', 'dir', 'pag', 'inst',

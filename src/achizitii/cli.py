@@ -115,7 +115,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # -- publish -------------------------------------------------------------------
     pub = sub.add_parser(
-        "publish", help="build the browser-queryable bundle served from GitHub Pages"
+        "publish", help="build the browser-queryable bundle served from Cloudflare Pages"
     )
     pub.add_argument(
         "--out", type=Path, default=None,

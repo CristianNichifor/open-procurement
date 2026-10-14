@@ -44,11 +44,11 @@ SEAP api-pub   ──►  raw/     immutable archive, personal data stripped
 data.gov.ro    ──►  gov/     11 years, 5 tables, 30M rows
                     findings/  risk indicators
                             └─►  site/data/  aggregates + findings, 24 MB
-                                 └─►  GitHub Pages + DuckDB-Wasm, queried in the browser
+                                 └─►  Cloudflare Pages + DuckDB-Wasm, queried in the browser
 ```
 
-The published bundle is aggregates, not raw rows: the archive is 1.5 GB and Pages caps a
-site at 1 GB, but more to the point a browser has no use for 26.7M rows it must download
+The published bundle is aggregates, not raw rows: the archive is 1.5 GB, too much to serve as
+static files, but more to the point a browser has no use for 26.7M rows it must download
 before answering anything. Build it with `achizitii publish`.
 
 The whole pipeline runs in GitHub Actions and publishes static files. There is no
@@ -165,7 +165,7 @@ responses is stripped before anything is written to `core/`. See `src/achizitii/
 ## Roadmap
 
 - [x] **Stage 0** — direct acquisitions → line items → normalisation → Parquet → browser
-- [x] **Published site** — aggregates + findings on GitHub Pages, queried with DuckDB-Wasm
+- [x] **Published site** — aggregates + findings on Cloudflare Pages, queried with DuckDB-Wasm
 - [ ] **Stage 1** — full 2016→now backfill via data.gov.ro; CPV alias table; CPI deflation
 - [ ] **Stage 2** — registered OCID prefix, OCDS validator-clean, tagged release + Zenodo DOI
 - [ ] **Stage 3** — corruption risk indicators, methodology doc, right-of-reply process

@@ -52,12 +52,12 @@ if gh release view "$TAG" >/dev/null 2>&1; then
 else
   gh release create "$TAG" "$tmp/$ARHIVA" "$tmp/manifest.json" \
     --title "Bundle ${TAG#bundle-}" \
-    --notes "Agregatele derivate servite de pe GitHub Pages, construite cu \`achizitii publish\`.
+    --notes "Agregatele derivate servite de pe Cloudflare Pages, construite cu \`achizitii publish\`.
 
 Arhiva conține \`data/\` relativ la \`site/\`, fără \`data/preturi/\` — prețurile zilnice
 colectate rămân în git, fiind singura copie care există.
 
-Fluxul \`pages\` descarcă automat cel mai recent \`bundle-*\` când \`site/data\` nu e în checkout."
+Fluxul \`deploy-pages-cloudflare\` descarcă automat cel mai recent \`bundle-*\` când \`site/data\` nu e în checkout."
 fi
 
 echo
