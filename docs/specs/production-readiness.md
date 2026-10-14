@@ -126,10 +126,10 @@ limiter only spaced consecutive requests, per client instance.
 - Given 450 requests in any rolling 300-second window, when the next request is due, then
   it waits until the oldest of the 450 is older than 300 seconds (`config.SEAP_MAX_PER_WINDOW`,
   default 450 of the published 500).
-- Given `config.SEAP_MAX_BURST` requests (default 3) in any one second, then the next waits
+- Given `config.SEAP_MAX_BURST` requests (default 3, 2 since OP-29) in any one second, then the next waits
   for the start of that second to be a full second ago; consecutive requests are also at
   least `1 / config.MAX_RPS` apart (default 1.5 per second).
-- Given a 429, 403 or 5xx answer, when the client retries, then it waits
+- Given a 5xx answer (429 and 403 open the breaker since OP-30), when the client retries, then it waits
   `config.BACKOFF_BASE * 2^attempt` seconds first and the retry is counted by the limiter.
 - Given the `ACHIZITII_SEAP_MAX_PER_WINDOW`, `ACHIZITII_SEAP_MAX_BURST` or
   `ACHIZITII_SEAP_MAX_RPS` environment variables, then they override the defaults but are
@@ -138,7 +138,7 @@ limiter only spaced consecutive requests, per client instance.
 Tests: `tests/test_rate_limit.py` (fake clock: the 5-minute cap, the per-second cap, the
 minimum spacing, retries counted, backoff on 429/403/5xx, env clamp).
 
-### OP-29 At most two SEAP requests in any second, on one path (todo)
+### OP-29 At most two SEAP requests in any second, on one path (done)
 
 The hold on scheduled collection is lifted on the owner's decision (2026-10-14), on the
 condition that SEAP's published limits are respected: more than 500 HTTP requests in 5
@@ -153,7 +153,7 @@ minutes, or more than 50 in one second, from one IP gets it blocked, whatever th
 
 Tests: `tests/test_rate_limit.py`.
 
-### OP-30 A circuit breaker stops the whole run at the first sign of a block (todo)
+### OP-30 A circuit breaker stops the whole run at the first sign of a block (done)
 
 - Given an HTTP 403 or 429, or a page that reads as SEAP's block notice or a captcha,
   when it arrives, then the breaker opens at once: that request is not retried and every
@@ -166,7 +166,7 @@ Tests: `tests/test_rate_limit.py`.
 
 Tests: `tests/test_seap_breaker.py`.
 
-### OP-31 The scheduled run collects again, one at a time (todo)
+### OP-31 The scheduled run collects again, one at a time (done)
 
 - Given `.github/workflows/publish-data.yml`, then a scheduled run and a manual run both
   call `achizitii seap`; a push to `main` still only rebuilds the bundle.
@@ -179,7 +179,7 @@ Tests: `tests/test_seap_breaker.py`.
 
 Tests: `tests/test_seap_schedule.py`.
 
-### OP-32 The run summary proves the limits held (todo)
+### OP-32 The run summary proves the limits held (done)
 
 - Given a run of `achizitii seap`, whether it completes or the breaker stops it, then the
   JSON report and `$GITHUB_STEP_SUMMARY` give the total requests sent, the most sent in
@@ -188,7 +188,7 @@ Tests: `tests/test_seap_schedule.py`.
 
 Tests: `tests/test_rate_limit.py`, `tests/test_seap_breaker.py`.
 
-### OP-33 Backfill one day per dispatch (todo)
+### OP-33 Backfill one day per dispatch (done)
 
 - Given `.github/workflows/backfill.yml`, then it takes one `day` input, collects exactly
   that day with `achizitii seap`, shares the concurrency group and the limiter with the
@@ -197,7 +197,7 @@ Tests: `tests/test_rate_limit.py`, `tests/test_seap_breaker.py`.
 
 Tests: `tests/test_seap_schedule.py`, `tests/test_seap_breaker.py`.
 
-### DOC-2 SEAP incident: the hold is lifted (todo)
+### DOC-2 SEAP incident: the hold is lifted (done)
 
 - Given `docs/incident-2026-09-07-seap-block.md`, then a Status section dated 2026-10-14
   says the hold is lifted on the owner's decision, states the published limits, how they
