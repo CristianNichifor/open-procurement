@@ -369,6 +369,14 @@ Test: `tests/test_site_touch.py`; `tests/browser/typeahead.spec.js` drives the l
 Test: `tests/test_site_signals.py`; `tests/browser/ux.spec.js` (front door) in CI.
 Romanian legend text is agent-written: **needs human review**.
 
+### OP-20 Empty year offers every year (done)
+
+- Given a view filtered to one year, when the query returns no rows, then the status line
+  says so and offers a „Toți anii” button that clears the year and runs again; without a
+  year filter the advice stays as it was.
+
+Test: `tests/test_site_empty_year.py`; browser suite in CI.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.

@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-iYVGjvJbWzdJgwmP54lpBWM+WvKKkm6p+queAZOZFvc=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ya2KrP9JMOpkPb456kUJCR1XI9InbaSj97aiNWEaolQ=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -2305,6 +2305,9 @@ function render(table) {
       return;
     }
     status('Niciun rezultat. Relaxați filtrele.');
+    if ($('an').value) $('status').append(' ', Object.assign(document.createElement('button'), {
+      type: 'button', className: 'civic-button', textContent: 'Toți anii', // screen 02: empty year
+      onclick: () => { $('an').value = ''; pagina = 0; run(); } }));
     // "No results" is the wrong answer when the name is simply on the other side of the
     // transaction. Searching DEDEMAN — a supplier — lands on the buyers view and reports
     // nothing, which reads as "not in the data" rather than "wrong aspect". Grouping the
