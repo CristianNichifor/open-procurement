@@ -2,6 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-2PVweZ8BvtBrYSlQNEcNewyUY77xwVWd3IcSpRtbVw8=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -383,7 +384,7 @@
   <h1>Achiziții publice din România</h1>
   <p class="sub" id="scale">Date deschise despre banii cheltuiți de instituțiile publice.</p>
 
-  <form class="hero" id="hero" onsubmit="return false">
+  <form class="hero" id="hero">
     <div class="civic-field">
       <input id="q" class="civic-input" autocomplete="off"
              aria-label="Caută o autoritate, o firmă, un CUI sau un produs"
@@ -2903,6 +2904,9 @@ $('descarca').addEventListener('click', exportCsv);
 $('pag-prev').addEventListener('click', () => turnPage(-1));
 $('pag-next').addEventListener('click', () => turnPage(1));
 $('run').addEventListener('click', heroSearch);
+// Enter in the box would also submit the form and reload the page. An inline onsubmit attribute
+// used to stop that; the Content-Security-Policy now blocks inline handlers.
+$('hero').addEventListener('submit', (e) => e.preventDefault());
 $('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') heroSearch(); });
 // Through rerun(), not run(), because each of these changes the result set: staying on
 // page 4 while the thing being paged through is replaced shows the reader an arbitrary

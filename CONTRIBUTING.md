@@ -41,6 +41,8 @@ jobs fail. The offline subset does not claim released-data or browser coverage.
 `site/metodologie.html`, `site/replica.html` and `site/privacy.html` are rendered from
 `METHODOLOGY.md`, `CORRECTIONS.md` and `docs/site/`. After editing any of them run
 `.venv/bin/python scripts/build_pages.py` and commit the result; a test fails otherwise.
+The same script updates the script hash in the front page's Content-Security-Policy, so
+run it after any change to the inline script in `site/index.html` too.
 
 ## Changes and review
 

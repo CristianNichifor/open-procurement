@@ -12,6 +12,8 @@ Usage:
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import html
 import re
 from pathlib import Path
@@ -28,6 +30,24 @@ LINKS = {
     "METHODOLOGY.md": "metodologie.html",
     "CORRECTIONS.md": "replica.html",
 }
+
+# Served as static files, so the policy travels in a <meta> tag (frame-ancestors cannot).
+STATIC_CSP = (
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'none'"
+)
+# The front page: the inline module by its hash; DuckDB-Wasm from cdn.jsdelivr.net (module,
+# worker, wasm), its parquet and httpfs extensions from extensions.duckdb.org, compiled
+# as WebAssembly, with the worker started from a blob: URL. Host-wide rather than pinned
+# paths, because the +esm build resolves its own dependencies' versions server side.
+INDEX_CSP = (
+    "default-src 'self'; script-src 'self' {hash} 'wasm-unsafe-eval' https://cdn.jsdelivr.net; "
+    "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; "
+    "connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; "
+    "worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; "
+    "form-action 'self'"
+)
+CSP_META = re.compile(r'<meta http-equiv="Content-Security-Policy" content="[^"]*">')
 
 FAVICON = (
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E"
@@ -108,6 +128,7 @@ def render(name: str) -> str:
 <html lang="ro">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="{STATIC_CSP}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title_ro)} — Open Procurement</title>
 <meta name="description" content="{html.escape(page["description"])}">
@@ -147,10 +168,24 @@ def render_all() -> dict[str, str]:
     return {name: render(name) for name in PAGES}
 
 
+def index_with_csp(source: str) -> str:
+    """The front page with its policy naming the current hash of its inline module."""
+    scripts = re.findall(r"<script[^>]*>(.*?)</script>", source, flags=re.DOTALL)
+    hashes = " ".join(
+        "'sha256-" + base64.b64encode(hashlib.sha256(s.encode()).digest()).decode() + "'"
+        for s in scripts
+    )
+    meta = f'<meta http-equiv="Content-Security-Policy" content="{INDEX_CSP.format(hash=hashes)}">'
+    return CSP_META.sub(lambda _: meta, source, count=1)
+
+
 def main() -> None:
     for name, text in render_all().items():
         (SITE / name).write_text(text, encoding="utf-8")
         print(f"wrote site/{name}")
+    index = SITE / "index.html"
+    index.write_text(index_with_csp(index.read_text(encoding="utf-8")), encoding="utf-8")
+    print("updated the script hash in site/index.html")
 
 
 if __name__ == "__main__":
