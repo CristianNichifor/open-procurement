@@ -490,7 +490,12 @@
 </main>
 
 <script type="module">
-import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/+esm';
+// Imported dynamically, inside the boot block. A static import made the whole module
+// depend on cdn.jsdelivr.net: with that host blocked, not one line of this script ran and
+// the page stayed on its first spinner, although the front door needs no engine at all.
+// The engine stays on the CDN: its wasm is 35.7 MB, over the 25 MiB Pages file limit.
+const ENGINE_HOST = 'cdn.jsdelivr.net';
+const ENGINE_URL = `https://${ENGINE_HOST}/npm/@duckdb/duckdb-wasm@1.29.0/+esm`;
 
 const $ = (id) => document.getElementById(id);
 const status = (m) => { $('status').className = 'civic-loading'; $('status').textContent = m; };
@@ -2682,7 +2687,8 @@ function selectTab(key, ind) {
        'Fiecare rând înseamnă „merită verificat”, niciodată „este ilegal”.')
       + (uses.an ? '' : ' Acest indicator agregă pe toți anii, deci nu are filtru de an.')
     : VIEWS[key].note;
-  run();
+  // Returned so that a caller can wait for the draw; nobody else needs to.
+  return run();
 }
 
 (async () => {
@@ -2812,6 +2818,7 @@ function selectTab(key, ind) {
     // filtering is not ready yet. The spinner still runs, because the tabs are disabled
     // and a reader who clicks one deserves to know why.
     booting(earlyDrawn ? 'Se pregătesc filtrele și căutarea…' : 'Se pregătește motorul…');
+    const duckdb = await import(ENGINE_URL);
     const bundle = await duckdb.selectBundle(duckdb.getJsDelivrBundles());
     const worker = await duckdb.createWorker(bundle.mainWorker);
     booting(earlyDrawn
@@ -2834,8 +2841,33 @@ function selectTab(key, ind) {
     if (!applyHash() && !earlyDrawn) goDefault();
     else if (earlyDrawn) status('');
   } catch (err) {
-    status(`Eroare la inițializare: ${err.message}. Servește folderul prin HTTP (nu file://).`);
     console.error(err);
+    // The front door was skipped because the address named another view. That view needs
+    // the engine, so show what can be shown — without rewriting the link the reader came
+    // with, which works again as soon as the engine can load. Drawn first and awaited,
+    // because finishing the front door clears the status line.
+    if (!earlyDrawn && manifest.panorama) {
+      try {
+        panoramaData = panoramaData
+          || await (await fetch(url(manifest.panorama.file))).json();
+        applying = true;
+        let drawn;
+        try { drawn = selectTab('panorama'); } finally { applying = false; }
+        await drawn;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    // Name the host. "Serve the folder over HTTP" was the only advice ever given, and on
+    // the published site — always HTTP — it sent readers chasing a problem they did not
+    // have, when the usual cause is a network or an extension blocking the CDN.
+    const local = location.protocol === 'file:'
+      ? ' Pagina trebuie servită prin HTTP, nu deschisă ca fișier (file://).' : '';
+    $('status').className = 'civic-error';
+    $('status').textContent = `Motorul de interogare nu a pornit (${err.message}). `
+      + `Fișierele lui vin de la ${ENGINE_HOST}: dacă rețeaua sau o extensie a browserului `
+      + `blochează acest domeniu, filtrele și căutarea nu sunt disponibile.${local}`
+      + (panoramaData ? ' Panorama de mai jos este calculată dinainte și este completă.' : '');
   }
 })();
 

@@ -12,5 +12,7 @@ for (const hash of ['', '#v=cpv']) {
     await expect(status).toContainText('cdn.jsdelivr.net');
     await expect(status).not.toContainText('file://');
     await expect(page.locator('#run')).toBeDisabled();
+    // The link the reader came with is kept: it works again once the engine can load.
+    if (hash) await expect(page).toHaveURL(new RegExp(`${hash}$`));
   });
 }
