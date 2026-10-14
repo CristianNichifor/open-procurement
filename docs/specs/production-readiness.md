@@ -8,7 +8,7 @@ Canonical address of the site: `https://projects.cristian-nichifor.com/open-proc
 
 ## Theme A: discoverability and trust
 
-### OP-3 Link previews and canonical address (todo)
+### OP-3 Link previews and canonical address (done)
 
 - Given the published `site/index.html`, when a crawler or a chat app reads its `<head>`,
   then it finds a `meta name="description"`, `og:title`, `og:description`, `og:type`,
@@ -19,7 +19,7 @@ Canonical address of the site: `https://projects.cristian-nichifor.com/open-proc
 
 Test: `tests/test_site_meta.py`.
 
-### OP-6 Privacy page (todo)
+### OP-6 Privacy page (done)
 
 - Given `site/privacy.html`, when it is read in Romanian or English, then it states that
   the site sets no cookies and runs no analytics, names the hosting (Cloudflare Pages,
@@ -34,7 +34,7 @@ Test: `tests/test_site_meta.py`.
 Test: `tests/test_site_links.py` (privacy section). English and Romanian text written by
 an agent: **needs human review**.
 
-### OP-5 Methodology and right of reply on the site (todo)
+### OP-5 Methodology and right of reply on the site (done)
 
 - Given the front page caveat, when a reader follows "metodologia" or "dreptul la
   replică", then they land on same-origin pages (`metodologie.html`, `replica.html`),
@@ -45,7 +45,7 @@ an agent: **needs human review**.
 - Given any of the static pages (privacy, methodology, right of reply), when the reader
   presses the RO/EN toggle, then `<html lang>` changes to the chosen language and only
   that language's text is shown; the choice survives a reload through the address
-  (`#en`).
+  (`?lang=en`; the site keeps nothing in browser storage).
 
 Tests: `tests/test_site_links.py`, `tests/test_site_pages.py`,
 `tests/browser/pages.spec.js`. The Romanian summary of the methodology (the source is
@@ -58,9 +58,9 @@ English only) is agent-written: **needs human review**.
 - Given cdn.jsdelivr.net is unreachable, when the front page loads, then the panorama
   still renders from JSON, and the status line names cdn.jsdelivr.net as the thing that
   failed instead of the old "serve over HTTP (not file://)" hint.
-- Self-hosting the engine was assessed: the DuckDB-Wasm 1.29.0 EH module is 35.7 MB (MVP 40.6 MB), over
-  Cloudflare Pages' 25 MiB per-file limit (enforced in the deploy workflow) and over half
-  of `scripts/check_repo_size.py`'s 60 MB derived budget. It stays on the CDN, imported
+- Self-hosting the engine was assessed: the DuckDB-Wasm 1.29.0 EH module is 35.7 MB
+  (MVP 40.6 MB), over Cloudflare Pages' 25 MiB per-file limit (enforced in the deploy
+  workflow) and over half of `scripts/check_repo_size.py`'s 60 MB derived budget. It stays on the CDN, imported
   dynamically so that a failure cannot take the rest of the page down with it.
 
 Test: `tests/browser/cdn-fallback.spec.js` (route `**/cdn.jsdelivr.net/**` aborted).
