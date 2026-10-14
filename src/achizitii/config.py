@@ -72,6 +72,58 @@ never that it consented."""
 TIMEOUT = 45.0
 RETRIES = 4
 
+# The two published thresholds, as SEAP states them. Everything below derives its ceiling
+# from these; nothing in the code may exceed them, whatever the environment says.
+SEAP_PUBLISHED_PER_5_MIN = 500
+SEAP_PUBLISHED_PER_SECOND = 50
+
+SEAP_WINDOW = 300.0
+"""The rolling window the 5-minute threshold is measured over, in seconds."""
+
+SEAP_MAX_PER_WINDOW = 450
+"""Requests allowed in any rolling 5 minutes, across every URL, worker and retry.
+
+450 of the published 500: the IP is shared with whatever else the runner does, and a retry
+is a request too. One limiter per process (client.SEAP_LIMITER) enforces this, so two
+workers do not each get 450."""
+
+SEAP_MAX_BURST = 3
+"""Requests allowed in any one second. The published ceiling is 50; nothing here needs more
+than a few, and a burst is what the block message complains about."""
+
+BACKOFF_BASE = 5.0
+"""Seconds before the first retry of a 429, 403 or 5xx; doubles each attempt. A 403 is
+retried because that is the status of the IP block itself: if it clears, the run goes on;
+if it does not, the run fails after RETRIES slow attempts rather than hammering."""
+
+
+def seap_limits() -> tuple[int, int, float]:
+    """(per window, per second, requests per second) after the environment overrides.
+
+    `ACHIZITII_SEAP_MAX_PER_WINDOW`, `ACHIZITII_SEAP_MAX_BURST` and `ACHIZITII_SEAP_MAX_RPS`
+    can lower the defaults for a cautious run. They can also ask for more, but the answer
+    is clamped: 95% of the published 5-minute threshold, 5 per second, and a sustained rate
+    that fits the same window. The published numbers are the line, not a starting point.
+    """
+    import os
+
+    def _env(name: str, default: float) -> float:
+        raw = os.environ.get(name)
+        if not raw:
+            return default
+        try:
+            value = float(raw)
+        except ValueError:
+            return default
+        return value if value > 0 else default
+
+    ceiling = int(SEAP_PUBLISHED_PER_5_MIN * 0.95)
+    per_window = min(int(_env("ACHIZITII_SEAP_MAX_PER_WINDOW", SEAP_MAX_PER_WINDOW)), ceiling)
+    burst = min(int(_env("ACHIZITII_SEAP_MAX_BURST", SEAP_MAX_BURST)), 5)
+    rps = min(_env("ACHIZITII_SEAP_MAX_RPS", MAX_RPS), ceiling / SEAP_WINDOW)
+    return per_window, burst, rps
+
+
 # The list endpoint caps `total` at 2000, so windows must stay small enough that a
 # single (day, page) sweep does not silently truncate. One day is comfortably safe
 # for tenders; direct acquisitions hit the cap and are paged.
