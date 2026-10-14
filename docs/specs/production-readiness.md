@@ -23,7 +23,7 @@ Test: `tests/test_site_meta.py`.
 
 - Given `site/privacy.html`, when it is read in Romanian or English, then it states that
   the site sets no cookies and runs no analytics, names the hosting (Cloudflare Pages,
-  and GitHub Pages while that deploy path exists) and the third-party requests (the
+  and GitHub Pages for the older github.io address) and the third-party requests (the
   DuckDB-Wasm engine from cdn.jsdelivr.net, its parquet and httpfs extensions from
   extensions.duckdb.org, both measured in a browser), names the operator Cristian Nichifor
   and gives the repository's GitHub issues as the contact.

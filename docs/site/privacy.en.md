@@ -23,8 +23,8 @@ https://github.com/CristianNichifor/open-procurement/issues
 Every web page reaches you through a server, which receives the technical data any
 request carries: IP address, browser type and the address requested.
 
-- **Hosting:** Cloudflare Pages (projects.cristian-nichifor.com). The same files are
-  also published through GitHub Pages while that deploy path exists.
+- **Hosting:** Cloudflare Pages (projects.cristian-nichifor.com). The project's older
+  address, cristiannichifor.github.io/open-procurement/, is served by GitHub Pages.
 - **CDN:** the DuckDB-Wasm query engine is downloaded from cdn.jsdelivr.net, and the
   two extensions it uses to read the data files (parquet, httpfs) from
   extensions.duckdb.org. These are the only third-party requests the page makes.
