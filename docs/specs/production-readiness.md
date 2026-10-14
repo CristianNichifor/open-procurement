@@ -247,6 +247,16 @@ Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it
   pe grup” instead of „n minim”. Closes D-7. Agent-written: needs human review.
 
 Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
+### OP-16 One provenance line under the title (done)
+
+- Given the front door after the bundle loads, then `#la-zi` is one line: „Date:
+  data.gov.ro, exporturile ANAP/ADR · date până la <day> · Metodologie”, with the
+  methodology as a link; its title lists each source's newest day.
+- Given the footer, then `#meta` carries the count of direct acquisitions only; the date
+  is said once.
+
+Test: `tests/test_site_provenance.py`; `tests/browser/ux.spec.js` („data date shown”).
+Closes D-6 in `docs/ux-guidelines.md`.
 
 ## Workflow-only (diff in the PR body for the maintainer)
 
