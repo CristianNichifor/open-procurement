@@ -84,7 +84,7 @@ Tests: `tests/test_site_meta.py` (CSP), `tests/browser/csp.spec.js`,
 `tests/browser/a11y.spec.js` (axe-core 4.13 via `@axe-core/playwright`, both colour
 schemes). The scan found no serious or critical violations, so nothing needed fixing.
 
-### OP-16 No internal terms in the interface (done)
+### OP-23 No internal terms in the interface (done)
 
 - Given every page under `site/` except the privacy notice and the methodology (which
   name the plumbing on purpose), when its visible text and the Romanian string literals

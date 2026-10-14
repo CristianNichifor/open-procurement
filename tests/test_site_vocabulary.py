@@ -1,4 +1,4 @@
-"""OP-16: the UI never shows the internal terms banned by docs/ux-guidelines.md §3."""
+"""OP-23: the UI never shows the internal terms banned by docs/ux-guidelines.md §3."""
 import re
 from pathlib import Path
 
