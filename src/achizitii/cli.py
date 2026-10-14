@@ -39,6 +39,53 @@ def _emit(payload: object) -> None:
     sys.stdout.write("\n")
 
 
+def _seap(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
+    """Collect, then report. Exit 0 only if every requested day was collected.
+
+    The report (JSON on stdout, `--report`, and the GitHub step summary when there is one)
+    is written however the run ends, so a stopped run still says how many requests it sent
+    and why it stopped.
+    """
+    import os
+
+    from . import pipeline
+    from .client import SEAP_LIMITER
+
+    yesterday = datetime.now(RO_TZ).date() - timedelta(days=1)
+    if args.days_back is not None:
+        end = yesterday
+        start = end - timedelta(days=args.days_back - 1)
+    elif args.start:
+        start, end = args.start, args.end or args.start
+    else:
+        parser.error("provide --start (and optionally --end) or --days-back")
+    if start > end:
+        parser.error("--start must not be after --end")
+    if end > yesterday:
+        # A day is complete only once it has ended in Romanian time; collecting it earlier
+        # archives part of it, and the archive never shrinks to let the rest in.
+        parser.error(f"{end} has not ended in Romanian time; the latest day is {yesterday}")
+
+    try:
+        report = pipeline.run(start, end, skip_raw=args.skip_raw, limit=args.limit)
+    except Exception as exc:  # noqa: BLE001 - reported below, then the exit status fails
+        report = {
+            "days": [], "items": 0, "aborted": f"{type(exc).__name__}: {exc}",
+            "aborted_day": None, "requests": SEAP_LIMITER.stats(),
+        }
+    _emit(report)
+    if args.report:
+        args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary:
+        with open(summary, "a", encoding="utf-8") as fh:
+            fh.write(pipeline.summary_markdown(report))
+    if report.get("aborted"):
+        print(f"ERROR: SEAP collection stopped: {report['aborted']}", file=sys.stderr)
+        return 3
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="achizitii",
@@ -54,6 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     seap.add_argument("--days-back", type=int)
     seap.add_argument("--skip-raw", action="store_true")
     seap.add_argument("--limit", type=int, help="cap records per day (smoke tests only)")
+    seap.add_argument("--report", type=Path, help="also write the JSON report to this file")
 
     # -- gov: bulk quarterly exports -----------------------------------------------
     gov = sub.add_parser("gov", help="ingest the data.gov.ro quarterly exports")
@@ -140,19 +188,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     if args.command == "seap":
-        from .pipeline import run
-
-        if args.days_back is not None:
-            end = datetime.now(RO_TZ).date() - timedelta(days=1)
-            start = end - timedelta(days=args.days_back - 1)
-        elif args.start:
-            start, end = args.start, args.end or args.start
-        else:
-            seap.error("provide --start (and optionally --end) or --days-back")
-        if start > end:
-            seap.error("--start must not be after --end")
-        _emit(run(start, end, skip_raw=args.skip_raw, limit=args.limit))
-        return 0
+        return _seap(args, seap)
 
     if args.command == "gov":
         from .govpipeline import check_coverage, ingest_years
