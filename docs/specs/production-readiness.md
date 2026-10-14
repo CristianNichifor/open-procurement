@@ -351,6 +351,14 @@ Closes D-6 in `docs/ux-guidelines.md`.
 Test: `tests/test_site_thin.py`; `tests/browser/ux.spec.js` („thin groups marked”).
 Closes D-5 in `docs/ux-guidelines.md`.
 
+### OP-25 Suggestions are touch targets (done)
+
+- Given the typeahead listbox, then each suggestion row is at least 44 px tall with its
+  text vertically centred (design screen 01 Home, acceptance), so a thumb can hit one
+  row on a phone.
+
+Test: `tests/test_site_touch.py`; `tests/browser/typeahead.spec.js` drives the listbox.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.
