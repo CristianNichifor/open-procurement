@@ -1,5 +1,23 @@
 # 2026-09-07 — SEAP blocked our IP
 
+## Status, 2026-10-14
+
+**GitHub runners reach SEAP; the schedule is still held.**
+
+On 2026-10-13 a manual run of the SEAP line-items job,
+[run 38437561637](https://github.com/CristianNichifor/open-procurement/actions/runs/38437561637)
+(`workflow_dispatch` on `main`), received **HTTP 200** on all 9,746 requests to
+`e-licitatie.ro/api-pub` between 17:18 and 19:07 UTC, list and detail endpoints alike. The run is marked failed, but for an unrelated reason: its last step,
+"Commit the day", tried to `git add` a path that `.gitignore` excludes
+(`data/autoritati.parquet`). Nothing in it suggests the restriction on GitHub's addresses
+has returned.
+
+That observation does not lift the hold. The scheduled trigger in
+`.github/workflows/publish-data.yml` stays off, guarded by `tests/test_seap_hold.py`,
+until an ADR records the decision to resume automated collection, at what rate, and what
+the answer to the 2026-09-08 request was. Until then SEAP is contacted only by a person
+starting a run by hand.
+
 ## What happened
 
 At roughly 22:50 UTC on 2026-09-07, `e-licitatie.ro/api-pub` began returning **HTTP 403**
