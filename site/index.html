@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-EYBRWxyReJS2KvOhQjWcpejOxCFa4W//zKFRTeXrsB0=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-xm69Hw7o7Gk+yPTf6PPzuFIPYXG/t+Xsv/CpjwF+aNk=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -713,6 +713,11 @@ const label = (c) => LABELS[c] || c.replace(/_/g, ' ');
 
 // Which price group the drill-down is showing, or null.
 let drill = null;
+
+// A median over fewer than this many prices is shown, greyed and explained, on every
+// table that ranks by median: hiding it would hide the group, and marking it on the
+// front door only (where it started) left the same figure unmarked one click away.
+const SLAB = 10;
 
 // A day, from whatever the source happened to hand over. Arrow gives dates back as epoch
 // milliseconds; the manifest and the URL carry them as "YYYY-MM-DD". Both reach the same
@@ -1764,6 +1769,9 @@ function fillTable(el, table, {
       if (pret && (c === 'denumire_key' || c === 'mediana_ron')) {
         td.classList.add(c === 'denumire_key' ? 'c-produs' : 'c-mediana');
       }
+      if (pret && (c === 'mediana_ron' || c === 'de_cate_ori') && Number(row.n) < SLAB) {
+        td.classList.add('slab');
+      }
       const extra = cellClass ? cellClass(row, c) : null;
       if (extra) td.classList.add(extra);
       if (numeric && !isLabel && money(c) && v !== null && v !== undefined) {
@@ -1781,6 +1789,17 @@ function fillTable(el, table, {
       td.dataset.label = '';
       td.textContent = act ? (act.cta || 'Fișă →') : '';
     }
+  }
+  // The explanation sits after the table's wrapper, once; a re-render replaces it.
+  const wrap = el.parentElement;
+  const prev = wrap && wrap.nextElementSibling;
+  if (prev && prev.classList.contains('nota-slab')) prev.remove();
+  if (wrap && pret && table.toArray().some((r) => Number(r.n) < SLAB)) {
+    const nota = document.createElement('p');
+    nota.className = 'nota-slab';
+    nota.textContent = `Rapoartele în gri se sprijină pe mai puțin de ${SLAB} prețuri `
+      + 'și sunt doar orientative.';
+    wrap.after(nota);
   }
   return Math.min(table.numRows, maxRows);
 }
@@ -1946,10 +1965,8 @@ async function runPanorama() {
       // pack size to read the row, and the row needs it to open the right group.
       // A ratio of p90 to p10 over eight prices is two prices divided by each other.
       // Shown, because hiding it would hide the group, but greyed and explained.
-      const SLAB = 10;
       tabel(sec, preturi, {
         hide: ['cpv', 'marime_pachet', 'din', 'pana_la'],
-        cellClass: (row, c) => (c === 'de_cate_ori' && Number(row.n) < SLAB ? 'slab' : null),
         onRow: (row) => ({
           title: 'Vezi achizițiile din spatele acestei mediane',
           cta: 'Detalii →',
@@ -1963,13 +1980,6 @@ async function runPanorama() {
           },
         }),
       });
-      if (preturi.toArray().some((r) => Number(r.n) < SLAB)) {
-        const nota = document.createElement('p');
-        nota.className = 'nota-slab';
-        nota.textContent = `Rapoartele în gri se sprijină pe mai puțin de ${SLAB} prețuri `
-          + 'și sunt doar orientative.';
-        sec.append(nota);
-      }
     }
     catre(sec, `Toate cele ${Number(p.randuri).toLocaleString('ro-RO')} de linii de preț →`,
           () => selectTab('preturi'));
