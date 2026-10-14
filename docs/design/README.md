@@ -87,3 +87,25 @@ Acceptance criteria an implementation session can turn into tests are listed per
   the aggregation rules; the signal table repeated with its legal basis.
 - Acceptance: `?lang=en` switches `<html lang>` and shows only that language;
   `scripts/build_pages.py` output equals the committed page (OP-5).
+
+## Implementation map (2026-10-14)
+
+Where each shared change is being built, so a session picking up a screen does not
+duplicate an open pull request. Update the row when a PR lands.
+
+| Change | Screen | PR |
+|---|---|---|
+| Family bar on the static pages (D-1, static half) | 05 | #115 |
+| Provenance line and contents on the static pages | 05 | #117 |
+| Status badge under the title (D-2) | 01 | #114 |
+| One provenance line under the title (D-6) | 01 | #118 |
+| Thin groups marked on every median table (D-5) | 01, 03 | #120 |
+| Suggestion rows at least 44 px tall | 01 | #122 |
+| Dates as `zz.ll.aaaa` in tables (D-3) | 04 | #112 |
+| Plain label for the group-size filter (D-7) | 03 | #110 |
+| Retry on every failed query (D-4) | all | #109 (merged) |
+| No internal terms in the interface (guard) | all | #119 |
+| Family bar on the front page (D-1, front half) | 01–04 | open: start after #114 and #118 land |
+| Entity file head from the entity index, stat tiles, per-year chart | 02 | open |
+| Range chart above the unit-price table | 03 | open |
+| Signals table with legal basis and share | 04 | open |
