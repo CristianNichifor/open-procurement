@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-EYBRWxyReJS2KvOhQjWcpejOxCFa4W//zKFRTeXrsB0=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-YF0WQoL4WPF7zEIWB7OKJVFJJeOtcbegsm+0FNROwIA=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -722,6 +722,10 @@ const dayOf = (v) => {
   if (typeof v === 'string') return v.slice(0, 10);
   return new Date(Number(v)).toISOString().slice(0, 10);
 };
+
+// The same day, for a reader: 14.10.2026, not 2026-10-14. Only for what is displayed;
+// the CSV (csvCell) and the URL (dayOf) keep ISO, which sorts and compares.
+const ziRo = (v) => new Date(Number(v)).toLocaleDateString('ro-RO', { timeZone: 'UTC' });
 
 // The archive files a group can possibly appear in.
 //
@@ -1757,7 +1761,7 @@ function fillTable(el, table, {
         // "true" in an otherwise Romanian table. Affects `comparabil` here and `anulat`
         // in the meetings register.
         : typeof v === 'boolean' ? (v ? 'da' : 'nu')
-        : dates.has(c) ? new Date(Number(v)).toISOString().slice(0, 10)
+        : dates.has(c) ? ziRo(v)
         : numeric && !isLabel && money(c) ? ron(v)
         : numeric && !isLabel ? Number(v).toLocaleString('ro-RO') : valueLabel(c, String(v));
       if (numeric) td.className = 'num';
