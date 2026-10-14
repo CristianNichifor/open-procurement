@@ -326,6 +326,19 @@ agent-written: **needs human review**.
 Test: `tests/test_site_status.py`. Romanian badge title is agent-written: **needs human
 review**. Closes D-2 in `docs/ux-guidelines.md`.
 
+### OP-16 One provenance line under the title (done)
+
+- Given the front door after the bundle loads, then `#la-zi` is one line: „Date:
+  data.gov.ro, exporturile ANAP/ADR · date până la <day> · Metodologie”, with the
+  methodology as a link; its title lists each source's newest day.
+- Given the footer, then `#meta` carries the count of direct acquisitions only; the date
+  is said once.
+- Given a newest collected day more than seven days old, then the line adds „(acum N de
+  zile)” (design screen 03: the stale collection says its age); fresher data adds nothing.
+
+Test: `tests/test_site_provenance.py`; `tests/browser/ux.spec.js` („data date shown”).
+Closes D-6 in `docs/ux-guidelines.md`.
+
 ### OP-17 Thin groups marked on every median view (done)
 
 - Given any table whose rows carry a product, a median and the percentiles, when a group

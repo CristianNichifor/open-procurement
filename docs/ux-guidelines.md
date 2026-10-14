@@ -124,6 +124,6 @@ From the live review (2026-10-14) and a code audit of `site/index.html`; screens
 - **D-3** Table date columns show ISO dates (`toISOString`) to readers; switch the displayed form to `ro-RO`, keep ISO in CSV and URL.
 - ~~**D-4** Error states have no retry action.~~ Fixed by OP-12.
 - ~~**D-5** Thin-sample warnings are not yet shown on every view that ranks by median.~~ Fixed by OP-17.
-- **D-6** The provenance line is split between `#la-zi` and the footer `#meta`; merge
-  into one „Date: …” line under the H1.
+- ~~**D-6** The provenance line is split between `#la-zi` and the footer `#meta`; merge
+  into one „Date: …” line under the H1.~~ Fixed by OP-16.
 - ~~**D-7** The `n minim` control label is jargon.~~ Now „Minimum de achiziții pe grup” (OP-13).
