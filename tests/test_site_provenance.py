@@ -36,3 +36,13 @@ def test_footer_keeps_only_the_count() -> None:
     meta = _assignment(source, "meta")
     assert "achiziții directe" in meta
     assert "laZi" not in meta, "the date is said once, under the title"
+
+
+def test_the_line_says_the_age_in_days_when_stale() -> None:
+    """Design screen 03: the stale-collection line shows the age in days."""
+    source = INDEX.read_text(encoding="utf-8")
+    at = source.index("const laZi = newest")
+    around = source[at - 600 : at + 300]
+    assert "ageDays" in around and "86400000" in around, "no age computed from the newest day"
+    assert "acum ${ageDays} de zile" in around, "the age is not said in days"
+    assert "ageDays > 7" in around, "a fresh collection should not nag"
