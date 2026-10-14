@@ -398,6 +398,7 @@ agent-written: **needs human review**.
 Test: `tests/test_site_entity_head.py`; browser suite in CI.
 
 
+<<<<<<< HEAD
 ### OP-27 Family bar on the front page (done)
 
 - Given `site/index.html`, then the first thing in `<body>` is the family bar the static pages
@@ -407,6 +408,15 @@ Test: `tests/test_site_entity_head.py`; browser suite in CI.
 - The front page is Romanian only, so it has no RO/EN toggle. Closes D-1 together with OP-18.
 
 Test: `tests/test_site_family_bar.py`.
+=======
+### OP-28 Entity figures say their years and nominal lei (done)
+
+- Given an entity file, then the „A cumpărat” and „A vândut” figures each add the span of
+  years their rows cover („2016–2026”, or one year) and that the sums are „lei nominali”,
+  as the tiles in design screen 02 do; a side with no rows adds no period.
+
+Test: `tests/test_site_entity_facts.py`.
+>>>>>>> origin/dev
 
 ## Workflow-only (diff in the PR body for the maintainer)
 

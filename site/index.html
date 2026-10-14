@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-2UjtGlfSbuq8DXPLN9pI4iEsdJC/+w74j6UjUdwBeCY=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-HkKPcdRRh2U1cv5f47DkC1+CQ7Lc9amn+B7Xn8ETLnk=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -2731,6 +2731,13 @@ async function runDosar() {
   const first = (t, col) => (rows(t)[0] ? rows(t)[0][col] : null);
   const total = (t, col) => rows(t).reduce((a, r) => a + Number(r[col] || 0), 0);
   const nf = (v) => Number(v).toLocaleString('ro-RO');
+  // The years a side's rows cover, so a figure says what it sums (design screen 02).
+  const perioada = (t) => {
+    const ani = rows(t).map((r) => Number(r.an)).filter(Number.isFinite);
+    if (!ani.length) return '';
+    const a = Math.min(...ani), b = Math.max(...ani);
+    return a === b ? String(a) : `${a}–${b}`;
+  };
 
   // The heading names the organisation, not the search term. Searching a fiscal code and
   // being shown that fiscal code back tells the reader nothing about whether they found
@@ -2784,10 +2791,12 @@ async function runDosar() {
   };
   const cumparat = total(by.cumparator, 'valoare_totala_ron');
   const vandut = total(by.furnizor, 'valoare_totala_ron');
-  fapt('A cumpărat', `${ron(cumparat)} RON`,
-       `${nf(total(by.cumparator, 'n'))} achiziții directe`);
-  fapt('A vândut', `${ron(vandut)} RON`,
-       `${nf(total(by.furnizor, 'n'))} achiziții directe`);
+  // Nominal: the file sums the years as published, without the inflation adjustment the
+  // tables offer, and says so beside the figure rather than in the methodology.
+  const sub = (t) => [`${nf(total(t, 'n'))} achiziții directe`, perioada(t),
+                      rows(t).length ? 'lei nominali' : ''].filter(Boolean).join(' · ');
+  fapt('A cumpărat', `${ron(cumparat)} RON`, sub(by.cumparator));
+  fapt('A vândut', `${ron(vandut)} RON`, sub(by.furnizor));
   if (by.semnale !== undefined) {
     // Never "suspiciuni". A signal means "worth checking", and the card says so where
     // the number is, not three paragraphs away.
