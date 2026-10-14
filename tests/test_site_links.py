@@ -228,3 +228,9 @@ def test_the_no_cookies_claim_stays_true() -> None:
         for needle in ("document.cookie", "localStorage", "sessionStorage",
                        "googletagmanager", "google-analytics", "plausible.io", "matomo."):
             assert needle not in text, f"{p} uses {needle}; update privacy.html first"
+
+
+def test_the_footer_links_method_and_contact(source: str) -> None:
+    footer = source.split("<footer>")[1].split("</footer>")[0]
+    assert 'href="metodologie.html"' in footer
+    assert "open-procurement/issues" in footer
