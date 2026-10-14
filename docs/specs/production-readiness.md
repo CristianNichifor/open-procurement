@@ -247,6 +247,15 @@ Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it
   pe grup” instead of „n minim”. Closes D-7. Agent-written: needs human review.
 
 Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
+### OP-22 Entity head before the engine (done)
+
+- Given a search term that matches one entry of `site/data/entitati.json` exactly (its
+  CUI, or its name without regard to case or diacritics), when the entity file opens, then
+  the H2 and CUI line are drawn from the index at once, before the engine answers; the
+  queried head replaces them.
+- Given no exact match, then nothing is drawn early and the file proceeds as before.
+
+Test: `tests/test_site_entity_head.py`; browser suite in CI.
 
 ## Workflow-only (diff in the PR body for the maintainer)
 
