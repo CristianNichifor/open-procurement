@@ -53,7 +53,7 @@ English only) is agent-written: **needs human review**.
 
 ## Theme B: resilience and quality
 
-### OP-4 The front page survives a blocked CDN (todo)
+### OP-4 The front page survives a blocked CDN (done)
 
 - Given cdn.jsdelivr.net is unreachable, when the front page loads, then the panorama
   still renders from JSON, and the status line names cdn.jsdelivr.net as the thing that
@@ -65,16 +65,26 @@ English only) is agent-written: **needs human review**.
 
 Test: `tests/browser/cdn-fallback.spec.js` (route `**/cdn.jsdelivr.net/**` aborted).
 
-### OP-7 Content Security Policy and accessibility scan (todo)
+### OP-7 Content Security Policy and accessibility scan (done)
 
 - Given each page, then a `<meta http-equiv="Content-Security-Policy">` allows only self,
-  cdn.jsdelivr.net where the engine needs it, and `data:`/`blob:` where needed.
+  cdn.jsdelivr.net and extensions.duckdb.org where the engine needs them, and
+  `data:`/`blob:` where needed. The inline module is allowed by its sha256 hash, which
+  `scripts/build_pages.py` keeps current; inline event handlers are gone.
+- Given the real engine boot and queries, when the policy is applied, then no
+  `securitypolicyviolation` event fires (`tests/browser/csp.spec.js`).
+- SRI is not applied to the engine (blocked): DuckDB-Wasm fetches its own worker, wasm and
+  extensions, none of which can carry an integrity attribute, and jsDelivr's `+esm` build
+  resolves its dependency versions server side, so a pinned hash could break the page
+  without any change here.
 - Given the front page and the static pages, when axe-core scans them, then there are no
   serious or critical violations.
 
-Tests: `tests/test_site_meta.py` (CSP), `tests/browser/a11y.spec.js`.
+Tests: `tests/test_site_meta.py` (CSP), `tests/browser/csp.spec.js`,
+`tests/browser/a11y.spec.js` (axe-core 4.13 via `@axe-core/playwright`, both colour
+schemes). The scan found no serious or critical violations, so nothing needed fixing.
 
-### DOC-1 SEAP incident status (todo)
+### DOC-1 SEAP incident status (done)
 
 - Given `docs/incident-2026-09-07-seap-block.md`, then it carries a dated Status section
   citing run 38437561637 (GitHub runners got HTTP 200 on 2026-10-13) and saying the
