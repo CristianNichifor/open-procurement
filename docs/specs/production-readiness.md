@@ -212,6 +212,23 @@ Test: `tests/test_entity_index.py`, `tests/browser/typeahead.spec.js`.
 
 Test: `tests/browser/mobile-prices.spec.js` at 390 px and 1440 px.
 
+## Theme E: UX guidelines
+
+### OP-11 UX guidelines with a conformance checklist (done)
+
+- Given `docs/ux-guidelines.md`, then it states the users and top tasks, page anatomy,
+  content, data-viz, state, mobile and accessibility rules, the status vocabulary, a
+  conformance checklist mapped to tests and a backlog of known deviations, in line with the
+  civic-ui fleet guideline.
+- Given the checklist, when a test file it names is renamed or deleted, then
+  `tests/test_ux_guidelines.py` fails.
+- Given the front-door footer, then it links the method page and a contact (the issue
+  tracker) beside source, licence, privacy and code.
+- Romanian labels in the guideline and the footer („Metodologie”, „Contact”, the status
+  vocabulary) are agent-written: needs human review.
+
+Test: `tests/test_ux_guidelines.py`, `tests/test_site_links.py`.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.
