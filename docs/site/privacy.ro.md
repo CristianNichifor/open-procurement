@@ -24,8 +24,8 @@ Orice pagină web ajunge la dumneavoastră printr-un server, care primește date
 pe care le poartă orice cerere: adresa IP, tipul browserului și adresa paginii cerute.
 
 - **Găzduire:** Cloudflare Pages (projects.cristian-nichifor.com). Adresa mai veche a
-  proiectului, cristiannichifor.github.io/open-procurement/, este servită de GitHub
-  Pages.
+  proiectului, cristiannichifor.github.io/open-procurement/, este servită de
+  GitHub Pages.
 - **CDN:** motorul de interogare DuckDB-Wasm se descarcă de la cdn.jsdelivr.net, iar
   cele două extensii ale lui care citesc fișierele de date (parquet, httpfs) de la
   extensions.duckdb.org. Acestea sunt singurele cereri către terți pe care le face
