@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-YF0WQoL4WPF7zEIWB7OKJVFJJeOtcbegsm+0FNROwIA=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-VbXySGXiUg4VfpXHNphoVxAcha4RSNrMiOKtnzx6qlU=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -2986,12 +2986,22 @@ function selectTab(key, ind) {
   ].filter(([, d]) => d);
   const ziua = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString('ro-RO',
     { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-  const laZi = zile.length
-    ? `date până la ${ziua(zile.map(([, d]) => d).sort().at(-1))}` : '';
-  $('la-zi').textContent = laZi ? `${laZi[0].toUpperCase()}${laZi.slice(1)}.` : '';
+  const newest = zile.length ? zile.map(([, d]) => d).sort().at(-1) : null;
+  // The age in days, said plainly once the newest day is more than a week old: while the
+  // collection is held, the status badge stays true and the line says how old they are
+  // (UX guidelines §7, design screen 03).
+  const ageDays = newest
+    ? Math.floor((Date.now() - Date.parse(`${newest}T00:00:00Z`)) / 86400000) : 0;
+  const laZi = newest
+    ? `date până la ${ziua(newest)}${ageDays > 7 ? ` (acum ${ageDays} de zile)` : ''}` : '';
+  // One provenance line, said once: the source, the newest collected day, the method.
+  // The footer keeps the count only (D-6 in docs/ux-guidelines.md).
+  const metodologie = document.createElement('a');
+  metodologie.href = 'metodologie.html';
+  metodologie.textContent = 'Metodologie';
+  $('la-zi').replaceChildren('Date: data.gov.ro, exporturile ANAP/ADR' + (laZi ? ` · ${laZi}` : '') + ' · ', metodologie);
   $('la-zi').title = zile.map(([s, d]) => `${s}: ${ziua(d)}`).join(' · ');
-  $('meta').textContent = `${nf(ac.achizitii_directe_randuri)} achiziții directe`
-    + (laZi ? ` · ${laZi}` : '');
+  $('meta').textContent = `${nf(ac.achizitii_directe_randuri)} achiziții directe`;
 
   // Six plain tabs instead of seventeen. The eight indicators were shown as bare ids
   // ("dependenta-01"), which tells a reader nothing and pushed the table below the fold
