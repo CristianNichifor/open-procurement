@@ -47,7 +47,7 @@ def test_the_toggle_script_sets_the_document_language() -> None:
     assert "lang=en" in js or "'lang'" in js, "the choice must survive a reload"
 
 
-# OP-13: every static page starts with the family bar back to the hub.
+# OP-18: every static page starts with the family bar back to the hub.
 HUB = "https://projects.cristian-nichifor.com/"
 STATIC = ("metodologie.html", "replica.html", "privacy.html")
 

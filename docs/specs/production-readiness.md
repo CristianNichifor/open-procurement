@@ -247,7 +247,7 @@ Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it
   pe grup” instead of „n minim”. Closes D-7. Agent-written: needs human review.
 
 Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
-### OP-13 Family bar on the static pages (done)
+### OP-18 Family bar on the static pages (done)
 
 - Given `metodologie.html`, `replica.html` and `privacy.html`, when the page is read, then
   the first thing in the `<header>` is a family bar (civic-ui `FamilyBar`, native markup):
