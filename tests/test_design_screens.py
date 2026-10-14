@@ -31,3 +31,11 @@ def test_mockups_use_comma_below_diacritics():
     for name in EXPECTED:
         text = (SCREENS / name).read_text(encoding="utf-8")
         assert not set("şţŞŢ") & set(text), name
+
+
+def test_mockups_avoid_internal_terms():
+    """docs/ux-guidelines.md §3: no plumbing words in the interface, mockups included."""
+    for name in EXPECTED:
+        text = (SCREENS / name).read_text(encoding="utf-8").split("<body>", 1)[1]
+        for term in ("DuckDB", "Parquet", "bundle", "R2", "OCDS", "bucket", "n minim"):
+            assert term not in text, (name, term)
