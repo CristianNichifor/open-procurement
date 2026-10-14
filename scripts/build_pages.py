@@ -16,6 +16,7 @@ import base64
 import hashlib
 import html
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 
 import markdown
@@ -168,13 +169,44 @@ def render_all() -> dict[str, str]:
     return {name: render(name) for name in PAGES}
 
 
+class _InlineScripts(HTMLParser):
+    """The text of every inline <script>, exactly as the browser hashes it. A parser
+    rather than a regular expression, which misses <SCRIPT> and `</script >`."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=False)
+        self.scripts: list[str] = []
+        self._inside = False
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "script" and not dict(attrs).get("src"):
+            self._inside = True
+            self.scripts.append("")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "script":
+            self._inside = False
+
+    def handle_data(self, data: str) -> None:
+        if self._inside:
+            self.scripts[-1] += data
+
+
+def inline_scripts(source: str) -> list[str]:
+    parser = _InlineScripts()
+    parser.feed(source)
+    parser.close()
+    return parser.scripts
+
+
+def script_hash(script: str) -> str:
+    return "'sha256-" + base64.b64encode(hashlib.sha256(script.encode()).digest()).decode() + "'"
+
+
 def index_with_csp(source: str) -> str:
     """The front page with its policy naming the current hash of its inline module."""
-    scripts = re.findall(r"<script[^>]*>(.*?)</script>", source, flags=re.DOTALL)
-    hashes = " ".join(
-        "'sha256-" + base64.b64encode(hashlib.sha256(s.encode()).digest()).decode() + "'"
-        for s in scripts
-    )
+    scripts = inline_scripts(source)
+    hashes = " ".join(script_hash(s) for s in scripts)
     meta = f'<meta http-equiv="Content-Security-Policy" content="{INDEX_CSP.format(hash=hashes)}">'
     return CSP_META.sub(lambda _: meta, source, count=1)
 

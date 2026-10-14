@@ -86,6 +86,16 @@ def test_the_preview_image_is_drawn_by_a_script_in_the_repo() -> None:
 # is allowed by its hash rather than by 'unsafe-inline': an injected script tag would not
 # match it. scripts/build_pages.py rewrites the hash after the script changes.
 
+def _build():
+    """scripts/build_pages.py, which extracts inline scripts with an HTML parser."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("build_pages", "scripts/build_pages.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 PAGES = ("index.html", "privacy.html", "metodologie.html", "replica.html")
 
 
@@ -118,7 +128,7 @@ def test_static_pages_run_only_their_own_script(page: str) -> None:
 
 def test_the_inline_module_is_allowed_by_its_hash() -> None:
     source = (SITE / "index.html").read_text(encoding="utf-8")
-    scripts = re.findall(r"<script[^>]*>(.*?)</script>", source, flags=re.DOTALL)
+    scripts = _build().inline_scripts(source)
     assert len(scripts) == 1, "one inline script, one hash"
     digest = base64.b64encode(hashlib.sha256(scripts[0].encode()).digest()).decode()
     assert f"'sha256-{digest}'" in _csp("index.html")["script-src"], (
