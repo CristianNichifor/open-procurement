@@ -23,8 +23,9 @@ def test_one_status_badge_from_the_vocabulary() -> None:
     assert sum(source.count(word) for word in VOCABULARY) == 1
 
 
-def test_badge_sits_under_the_title() -> None:
+def test_badge_sits_in_the_family_bar() -> None:
+    # OP-27 moved it from under the H1 into the family bar, as design screen 01 draws it.
     source = INDEX.read_text(encoding="utf-8")
-    h1 = source.index("<h1>")
+    bar = source.index('<header class="family-bar">')
     badge = source.index('class="status-badge"')
-    assert h1 < badge < h1 + 600, "the badge belongs right under the H1"
+    assert bar < badge < source.index("</header>", bar) < source.index("<h1>")

@@ -222,7 +222,13 @@
   .nota-slab, .nota-legenda { color:var(--muted); font-size:.8rem; margin:.4rem 0 0; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px;
              overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
-  .status { margin:-.75rem 0 .75rem; }
+  /* The family bar the static pages carry (OP-18, OP-27): hub link, tool name, status badge. */
+  .family-bar { display:flex; align-items:center; flex-wrap:wrap; gap:.25rem 1rem;
+    max-width:1080px; margin:0 auto; padding:.25rem 1rem; font-size:.875rem;
+    border-bottom:1px solid var(--line, #d0d7de); }
+  .family-bar a { display:inline-flex; align-items:center; min-height:44px; text-decoration:none; font-weight:600; }
+  .family-bar .home { color:var(--muted); }
+  @media (max-width: 480px) { .family-bar .home { flex-basis:100%; } }
   .status-badge { display:inline-block; font-size:.75rem; font-weight:600; letter-spacing:.02em;
     padding:.1rem .5rem; border:1px solid var(--muted); border-radius:999px; color:var(--muted); }
   .la-zi { color:var(--muted); font-size:.8rem; margin:-1rem 0 1.25rem; }
@@ -447,9 +453,13 @@
 <link rel="stylesheet" href="civic-host.css">
 </head>
 <body>
+<header class="family-bar">
+  <a class="hub" href="https://projects.cristian-nichifor.com/">← Proiecte civice</a>
+  <span class="home">Achiziții publice din România</span>
+  <span class="status-badge" title="Exporturi data.gov.ro, actualizate la zi; vezi linia de sub titlu">Date reale</span>
+</header>
 <main class="civic-scope">
   <h1>Achiziții publice din România</h1>
-  <p class="status"><span class="status-badge" title="Exporturi data.gov.ro, actualizate la zi; vezi linia de mai jos">Date reale</span></p>
   <p class="sub" id="scale">Date deschise despre banii cheltuiți de instituțiile publice.</p>
   <p class="la-zi" id="la-zi"></p>
 

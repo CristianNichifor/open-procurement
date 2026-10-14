@@ -105,7 +105,7 @@ duplicate an open pull request. Update the row when a PR lands.
 | Plain label for the group-size filter (D-7) | 03 | #110 |
 | Retry on every failed query (D-4) | all | #109 (merged) |
 | No internal terms in the interface (guard) | all | #119 |
-| Family bar on the front page (D-1, front half) | 01–04 | open: start after #114 and #118 land |
+| Family bar on the front page (D-1, front half) | 01–04 | OP-27 |
 | Entity file head from the entity index, stat tiles, per-year chart | 02 | OP-22 (head), OP-28 (tile years, nominal lei); per-year chart already in the file |
 | Range chart above the unit-price table | 03 | needs human: one shared axis compares groups with different units, which the view forbids; phones already get a per-group range bar |
 | Signals table with legal basis and share | 04 | OP-19 (legal basis); share needs human: signals span direct awards and tenders, so no single published total is the denominator |

@@ -319,7 +319,7 @@ agent-written: **needs human review**.
 
 ### OP-26 Status badge from the vocabulary (done)
 
-- Given the front door, then exactly one badge under the H1 carries one of „Date reale”,
+- Given the front door, then exactly one badge (in the family bar since OP-27) carries one of „Date reale”,
   „Date demonstrative”, „Prototip”, „Arhivat” (UX guidelines §7); it says „Date reale”,
   and the as-of line below it keeps saying how old the newest data is.
 
@@ -397,6 +397,16 @@ agent-written: **needs human review**.
 
 Test: `tests/test_site_entity_head.py`; browser suite in CI.
 
+
+### OP-27 Family bar on the front page (done)
+
+- Given `site/index.html`, then the first thing in `<body>` is the family bar the static pages
+  carry (OP-18): „← Proiecte civice” linking to `https://projects.cristian-nichifor.com/`, the
+  tool name „Achiziții publice din România”, and the page's one status badge „Date reale”,
+  moved from under the H1 rather than repeated; its links are at least 44 px tall.
+- The front page is Romanian only, so it has no RO/EN toggle. Closes D-1 together with OP-18.
+
+Test: `tests/test_site_family_bar.py`.
 
 ### OP-28 Entity figures say their years and nominal lei (done)
 
