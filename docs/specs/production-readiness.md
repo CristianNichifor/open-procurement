@@ -241,6 +241,13 @@ Test: `tests/test_ux_guidelines.py`, `tests/test_site_links.py`.
 
 Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it again".
 
+### OP-13 A plain label for the group-size filter (done)
+
+- Given the filter row, then the minimum-group-size control is labelled „Minimum de achiziții
+  pe grup” instead of „n minim”. Closes D-7. Agent-written: needs human review.
+
+Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.

@@ -126,4 +126,4 @@ From the live review (2026-10-14) and a code audit of `site/index.html`; screens
 - **D-5** Thin-sample warnings are not yet shown on every view that ranks by median.
 - **D-6** The provenance line is split between `#la-zi` and the footer `#meta`; merge
   into one „Date: …” line under the H1.
-- **D-7** The `n minim` control label is jargon; needs a plain label („cel puțin … achiziții”).
+- ~~**D-7** The `n minim` control label is jargon.~~ Now „Minimum de achiziții pe grup” (OP-13).
