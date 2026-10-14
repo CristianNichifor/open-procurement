@@ -92,6 +92,29 @@ schemes). The scan found no serious or critical violations, so nothing needed fi
 
 Test: review only (documentation).
 
+### OP-9 SEAP request rate: one global rolling window (done)
+
+SEAP blocks an IP that makes more than 500 HTTP requests in 5 minutes, or more than 50 in
+one second, whatever the URL. Run 38437561637 made 9,746 requests in 1h49m. The previous
+limiter only spaced consecutive requests, per client instance.
+
+- Given any number of `SeapClient` instances and worker threads in one process, when they
+  send requests (retries included), then every request passes through one shared limiter.
+- Given 450 requests in any rolling 300-second window, when the next request is due, then
+  it waits until the oldest of the 450 is older than 300 seconds (`config.SEAP_MAX_PER_WINDOW`,
+  default 450 of the published 500).
+- Given `config.SEAP_MAX_BURST` requests (default 3) in any one second, then the next waits
+  for the start of that second to be a full second ago; consecutive requests are also at
+  least `1 / config.MAX_RPS` apart (default 1.5 per second).
+- Given a 429, 403 or 5xx answer, when the client retries, then it waits
+  `config.BACKOFF_BASE * 2^attempt` seconds first and the retry is counted by the limiter.
+- Given the `ACHIZITII_SEAP_MAX_PER_WINDOW`, `ACHIZITII_SEAP_MAX_BURST` or
+  `ACHIZITII_SEAP_MAX_RPS` environment variables, then they override the defaults but are
+  clamped under the published ceilings (500 per 5 minutes, 50 per second).
+
+Tests: `tests/test_rate_limit.py` (fake clock: the 5-minute cap, the per-second cap, the
+minimum spacing, retries counted, backoff on 429/403/5xx, env clamp).
+
 ## Theme C: first-visit experience (UX review of the live site, 2026-10-14)
 
 Measured on the live site: "Caută" stayed disabled for ~29 s on a cold load, a search for
