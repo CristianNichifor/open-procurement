@@ -12,7 +12,7 @@ INDEX = Path("site/index.html")
 
 
 def _facts(source: str) -> str:
-    start = source.index("const dl = document.createElement('dl');")
+    start = source.index("dl.className = 'fapte';")
     return source[start:source.index("cap.append(dl);", start)]
 
 
@@ -25,5 +25,5 @@ def test_the_period_comes_from_the_rows_shown() -> None:
 
 def test_both_sides_say_their_period_and_nominal_lei() -> None:
     facts = _facts(INDEX.read_text(encoding="utf-8"))
-    assert facts.count("perioada(by.") == 2, "both sides need their own years"
-    assert "lei nominali" in facts
+    assert "sub(by.cumparator)" in facts and "sub(by.furnizor)" in facts, "both sides"
+    assert "perioada(t)" in facts and "lei nominali" in facts
