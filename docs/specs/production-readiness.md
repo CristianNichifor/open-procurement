@@ -241,6 +241,15 @@ Test: `tests/test_ux_guidelines.py`, `tests/test_site_links.py`.
 
 Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it again".
 
+### OP-13 Plain label for the minimum-sample control (done)
+
+- Given the front page filters, then the control that sets the smallest group a median
+  is computed from is labelled „Cel puțin … achiziții”, not `n minim`; the label uses
+  comma-below diacritics and the input keeps its id and behaviour.
+
+Test: `tests/test_site_labels.py`. Romanian label written by an agent: **needs human
+review**. Closes D-7 in `docs/ux-guidelines.md`.
+
 ## Workflow-only (diff in the PR body for the maintainer)
 
 - OP-8 retire `pages.yml`, leaving Cloudflare Pages as the single deploy path.
