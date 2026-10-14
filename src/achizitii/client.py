@@ -58,6 +58,12 @@ class RateLimiter:
         self._lock = threading.Lock()
         self._next = 0.0
         self._sent: deque[float] = deque()
+        # What actually went out, measured after the sleep: the proof that the caps held.
+        self._stats_lock = threading.Lock()
+        self._out: list[float] = []
+        self._out_window: deque[float] = deque()
+        self._max_window = 0
+        self._max_second = 0
 
     def wait(self) -> None:
         with self._lock:
@@ -83,18 +89,125 @@ class RateLimiter:
             self._next = t + self._interval
         if t > now:
             self._sleep(t - now)
+        self._record(self._clock())
+
+    def _record(self, sent: float) -> None:
+        with self._stats_lock:
+            self._out.append(sent)
+            win = self._out_window
+            win.append(sent)
+            while win and win[0] <= sent - self._window:
+                win.popleft()
+            self._max_window = max(self._max_window, len(win))
+            in_second = 0
+            for t in reversed(win):
+                if t <= sent - 1.0:
+                    break
+                in_second += 1
+            self._max_second = max(self._max_second, in_second)
+
+    def send_times(self) -> list[float]:
+        with self._stats_lock:
+            return list(self._out)
+
+    def stats(self) -> dict[str, int]:
+        """Requests sent, and the most in any rolling window and in any one second."""
+        with self._stats_lock:
+            return {
+                "requests": len(self._out),
+                "max_per_window": self._max_window,
+                "max_per_second": self._max_second,
+            }
 
 
 SEAP_LIMITER = RateLimiter(*_limits_from_config())
 """The one limiter every SeapClient shares. SEAP counts per IP, not per client object."""
 
 
-class SeapClient:
-    """Thin wrapper with retries, backoff and rate limiting.
+class SeapBlocked(RuntimeError):
+    """SEAP is refusing us, or looks about to. The run stops; nothing is retried."""
 
-    Retries on connection errors, 403, 429 and 5xx, with exponential backoff
-    (config.BACKOFF_BASE). Does NOT retry other 4xx — those mean we sent something wrong
-    and repeating it is just rude. All instances share SEAP_LIMITER unless given another.
+
+# Phrases from the notice SEAP served on 2026-09-07, with and without diacritics, and the
+# usual captcha markers. Read only in a response that is not JSON: an item description is
+# free text and may say anything.
+_BLOCK_MARKERS = (
+    "a fost restricționat",
+    "a fost restrictionat",
+    "a fost restricţionat",
+    "trafic automat",
+    "captcha",
+    "recaptcha",
+    "hcaptcha",
+    "access denied",
+)
+
+
+def looks_blocked(response: httpx.Response) -> bool:
+    if "json" in response.headers.get("content-type", "").lower():
+        return False
+    try:
+        body = response.text.lower()
+    except Exception:  # noqa: BLE001 - an undecodable body is not evidence either way
+        return False
+    return any(marker in body for marker in _BLOCK_MARKERS)
+
+
+class CircuitBreaker:
+    """Opens once and stays open for the life of the process.
+
+    It opens on a 403 or 429, on a page that reads as the block notice or a captcha, or on
+    `config.SEAP_BREAKER_CONNECTION_FAILURES` connection failures in a row (any HTTP answer
+    resets that count). Once open, every request fails before it is sent, from every
+    thread. There is no half-open state: a run that was refused is over, and the next
+    scheduled run is the retry.
+    """
+
+    def __init__(self, max_connection_failures: int | None = None) -> None:
+        self._limit = max_connection_failures or config.SEAP_BREAKER_CONNECTION_FAILURES
+        self._lock = threading.Lock()
+        self._failures = 0
+        self.reason: str | None = None
+
+    @property
+    def is_open(self) -> bool:
+        return self.reason is not None
+
+    def check(self) -> None:
+        if self.reason is not None:
+            raise SeapBlocked(self.reason)
+
+    def trip(self, reason: str) -> SeapBlocked:
+        with self._lock:
+            if self.reason is None:
+                self.reason = reason
+                log.error("SEAP circuit breaker open: %s", reason)
+        return SeapBlocked(self.reason)
+
+    def answered(self) -> None:
+        with self._lock:
+            self._failures = 0
+
+    def connection_failed(self, exc: Exception) -> SeapBlocked | None:
+        with self._lock:
+            self._failures += 1
+            count = self._failures
+        if count >= self._limit:
+            return self.trip(f"{count} consecutive connection failures (last: {exc})")
+        return None
+
+
+SEAP_BREAKER = CircuitBreaker()
+"""The one breaker every SeapClient shares: a block on one thread stops them all."""
+
+
+class SeapClient:
+    """Thin wrapper with retries, backoff, rate limiting and a circuit breaker.
+
+    Retries connection errors and 5xx with exponential backoff (config.BACKOFF_BASE).
+    A 403, a 429 or a block/captcha page opens the breaker instead: no retry, and no later
+    request. Does NOT retry other 4xx — those mean we sent something wrong and repeating
+    it is just rude. All instances share SEAP_LIMITER and SEAP_BREAKER unless given others.
     """
 
     def __init__(
@@ -102,8 +215,10 @@ class SeapClient:
         limiter: RateLimiter | None = None,
         sleep: Callable[[float], None] = time.sleep,
         transport: httpx.BaseTransport | None = None,
+        breaker: CircuitBreaker | None = None,
     ) -> None:
         self._limiter = limiter if limiter is not None else SEAP_LIMITER
+        self._breaker = breaker if breaker is not None else SEAP_BREAKER
         self._sleep = sleep
         self._client = httpx.Client(
             http2=transport is None,
@@ -122,21 +237,36 @@ class SeapClient:
     def close(self) -> None:
         self._client.close()
 
+    def request_stats(self) -> dict[str, int]:
+        return self._limiter.stats()
+
     def _request(self, method: str, path: str, **kw: Any) -> httpx.Response:
         url = f"{config.API}{path}"
         last: Exception | None = None
         for attempt in range(config.RETRIES):
+            self._breaker.check()
             # Every attempt, retries included, takes a slot: SEAP counts them all.
             self._limiter.wait()
+            self._breaker.check()  # another thread may have tripped it while we slept
             try:
                 r = self._client.request(method, url, **kw)
-            except httpx.HTTPError as exc:  # connect/read/protocol errors
+            except httpx.RequestError as exc:  # connect/read/protocol errors
                 last = exc
                 log.warning("%s %s failed (%s), attempt %d", method, path, exc, attempt + 1)
+                blocked = self._breaker.connection_failed(exc)
+                if blocked is not None:
+                    raise blocked from exc
             else:
+                self._breaker.answered()
+                if r.status_code in (403, 429):
+                    raise self._breaker.trip(f"HTTP {r.status_code} on {method} {path}")
+                if looks_blocked(r):
+                    raise self._breaker.trip(
+                        f"block or captcha page (HTTP {r.status_code}) on {method} {path}"
+                    )
                 if r.status_code == 200:
                     return r
-                if r.status_code in (403, 429) or r.status_code >= 500:
+                if r.status_code >= 500:
                     last = httpx.HTTPStatusError(
                         f"HTTP {r.status_code}", request=r.request, response=r
                     )
