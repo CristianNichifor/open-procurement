@@ -21,8 +21,9 @@ def _visible(name: str) -> str:
     """Markup text plus the string literals of the inline script, minus styles."""
     html = (SITE / name).read_text(encoding="utf-8")
     body = html.split("<body", 1)[1]
-    scripts = re.findall(r"<script.*?</script>", body, flags=re.DOTALL)
-    body = re.sub(r"<script.*?</script>|<style.*?</style>", "", body, flags=re.DOTALL)
+    flags = re.DOTALL | re.IGNORECASE
+    scripts = re.findall(r"<script\b.*?</script[^>]*>", body, flags=flags)
+    body = re.sub(r"<script\b.*?</script[^>]*>|<style\b.*?</style[^>]*>", "", body, flags=flags)
     text = re.sub(r"<[^>]+>", " ", body)
     literals = re.findall(r"""['"`]([^'"`\n]{4,})['"`]""", "\n".join(scripts))
     romanian = [s for s in literals if re.search(r"[ăâîșț]| de | și ", s)]
