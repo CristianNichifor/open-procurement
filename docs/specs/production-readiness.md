@@ -247,6 +247,13 @@ Test: `tests/browser/ux.spec.js` › "a failed query offers a retry that runs it
   pe grup” instead of „n minim”. Closes D-7. Agent-written: needs human review.
 
 Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_label`.
+### OP-20 Empty year offers every year (done)
+
+- Given a view filtered to one year, when the query returns no rows, then the status line
+  says so and offers a „Toți anii” button that clears the year and runs again; without a
+  year filter the advice stays as it was.
+
+Test: `tests/test_site_empty_year.py`; browser suite in CI.
 
 ## Workflow-only (diff in the PR body for the maintainer)
 
