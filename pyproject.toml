@@ -15,7 +15,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.6", "xlwt>=1.3"]
+# markdown is pinned exactly: tests compare its output with the committed site pages.
+dev = ["pytest>=8.0", "ruff>=0.6", "xlwt>=1.3", "markdown==3.11.1"]
 # Only needed to PUBLISH to R2. The pipeline and the site build without it.
 r2 = ["boto3>=1.34"]
 

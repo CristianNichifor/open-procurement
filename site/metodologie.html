@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Metodologia — Open Procurement</title>
+<meta name="description" content="Cum sunt calculate prețurile unitare, agregatele și indicatorii publicați de Open Procurement.">
+<link rel="canonical" href="https://projects.cristian-nichifor.com/open-procurement/metodologie.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23123a6b'/%3E%3Crect x='3.5' y='8.5' width='2.5' height='4.5' fill='%23fff'/%3E%3Crect x='6.75' y='5.5' width='2.5' height='7.5' fill='%23fff'/%3E%3Crect x='10' y='3' width='2.5' height='10' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/civic-ui/native.css">
+<link rel="stylesheet" href="pages.css">
+<script src="lang.js" defer></script>
+<noscript><style>[data-lang] { display: revert !important; }</style></noscript>
+</head>
+<body data-title-ro="Metodologia — Open Procurement" data-title-en="Methodology — Open Procurement">
+<header class="page-head">
+  <a class="home" href="./">Open Procurement</a>
+  <div class="lang-toggle" role="group" aria-label="Limba / Language">
+    <button type="button" data-set-lang="ro" lang="ro" aria-pressed="true">RO</button>
+    <button type="button" data-set-lang="en" lang="en" aria-pressed="false">EN</button>
+  </div>
+</header>
+<main>
+<article data-lang="ro" lang="ro">
+<h1>Metodologia, pe scurt</h1>
+<p>Acesta este un rezumat în limba română. Documentul complet, cu toate verificările și
+corecturile, este versiunea în engleză (butonul <strong>EN</strong> de mai sus) și este cel care
+decide în caz de neconcordanță.</p>
+<h2>Principii</h2>
+<ol>
+<li><strong>Observație, nu acuzație.</strong> Proiectul raportează prețuri și poziții statistice. Nu
+   afirmă că s-a încălcat legea. Un preț mare are multe explicații nevinovate: urgență,
+   volum mic, livrare la distanță, altă specificație, servicii incluse.</li>
+<li><strong>Niciun număr fără numitorul lui.</strong> Orice agregat este publicat cu <code>n</code>. Grupurile sub
+   pragul minim de eșantion sunt suprimate, nu afișate ca valoare.</li>
+<li><strong>Mai bine necomparabil decât greșit.</strong> Acolo unde datele nu susțin o comparație,
+   rândul este marcat și exclus, nu forțat într-un număr.</li>
+<li><strong>Totul se poate urmări până la sursă.</strong> Fiecare rând păstrează <code>ocid</code>, adresa sursei
+   și versiunea parserului.</li>
+</ol>
+<h2>Prețul unitar</h2>
+<p>Pentru achizițiile directe din SEAP, prețul unitar este <code>itemClosingPrice</code>, preluat ca
+atare. <strong>Nu</strong> calculăm niciodată un preț unitar împărțind un total la o cantitate atunci
+când totalul este singura cifră disponibilă: rezultatul ar fi o medie de pachet.</p>
+<h2>Reguli de comparabilitate</h2>
+<p>Un rând este marcat <code>comparabil = false</code> când lipsește prețul sau cantitatea, când
+unitatea de măsură nu este recunoscută (nu o ghicim), sau când unitatea ori descrierea
+indică un pachet fără mărime cunoscută („set”, „pachet”, „cutie”). Un „set” al unei
+autorități nu se poate compara cu „setul” alteia.</p>
+<h2>Agregare</h2>
+<ul>
+<li>Doar rânduri comparabile; valorile extreme (sub percentila 1 și peste 99) sunt tăiate.</li>
+<li><strong>Mediana, nu media</strong>: prețurile din achiziții sunt puternic asimetrice.</li>
+<li>Minimum <code>n = 5</code> pentru a publica un grup.</li>
+<li>Sumele sunt nominale; deflatorul este publicat alături, ca orice an să poată fi
+  exprimat în banii altui an.</li>
+</ul>
+<h2>Indicatori de risc</h2>
+<p>Fiecare indicator declară temeiul legal (Legea 98/2016), ce tipar urmărește, la ce se
+aplică și perioada în care regula este valabilă. Toți sunt calcule deterministe peste
+câmpuri publice, fără modele de limbaj, ca autoritatea numită să poată verifica exact
+rezultatul.</p>
+<p>Un indicator înseamnă <strong>„merită verificat”</strong>, niciodată „este fraudă”. Concentrarea sub
+un plafon poate reflecta un buget real, o atribuire fără anunț este legală în cazurile
+prevăzute de art. 104, iar o pondere de 90% poate însemna o singură firmă calificată în
+zonă.</p>
+<h2>Comparații invalide</h2>
+<p>Nu agregăm niciodată peste coduri CPV diferite: mediana tuturor produselor măsurate în
+„buc” arată <em>ce a cumpărat</em> un județ, nu <em>cât a plătit</em>. Orice comparație ține constante
+cel puțin codul CPV, unitatea de măsură și mărimea pachetului.</p>
+<h2>Limite cunoscute</h2>
+<ul>
+<li>Sunt acoperite doar achizițiile directe; licitațiile deschise încă nu.</li>
+<li>Anul 2026 nu poate fi ajustat la inflație până nu publică Eurostat indicele.</li>
+<li>Județul este cel al sediului autorității, nu neapărat locul livrării.</li>
+<li>Tratamentul TVA nu este încă stabilit în datele sursă.</li>
+</ul>
+<h2>Corectări</h2>
+<p>Erorile sunt așteptate. Procedura completă este pe pagina
+<a href="replica.html">dreptul la replică</a>.</p>
+</article>
+<article data-lang="en" lang="en">
+<h1>Methodology</h1>
+<p>Version: <strong>0.1.0</strong> — every published figure is stamped with the methodology version that
+produced it. Changes to this document are versioned like code.</p>
+<h2>Principles</h2>
+<ol>
+<li><strong>Observation, not accusation.</strong> This project reports prices and statistical position.
+   It does not allege wrongdoing. A high price has many innocent explanations: urgency,
+   small volume, remote delivery, different specification, bundled services.</li>
+<li><strong>No number without its denominator.</strong> Any aggregate is published with <code>n</code>. Groups
+   below the minimum sample size are suppressed, not shown as a point estimate.</li>
+<li><strong>Incomparable is better than wrong.</strong> Where the data cannot support a comparison, the
+   row is flagged and excluded rather than coerced into a number.</li>
+<li><strong>Everything traces back.</strong> Every row carries its <code>ocid</code>, source URL and
+   <code>parse_version</code>. Every figure is one click from the original record.</li>
+</ol>
+<h2>Unit price</h2>
+<p>For SEAP direct acquisitions the unit price is <code>itemClosingPrice</code>, taken directly.</p>
+<p>This was verified rather than assumed. Across sampled records the identity</p>
+<pre><code>closingValue == Σ (itemClosingPrice × itemQuantity)
+</code></pre>
+<p>held for 25/25 records within 2% tolerance, and multi-quantity items are only sensible
+under the unit-price reading (a Lenovo V15 laptop at quantity 15 shows 3637.0 RON;
+divided by 15 it would be 242 RON, which is not a laptop).</p>
+<p>We <strong>never</strong> derive a unit price by dividing a total by a quantity when the total is the
+only figure available — that silently produces a bundle-average and is a common source of
+error in procurement analysis.</p>
+<h2>Comparability rules</h2>
+<p>A line item is marked <code>comparabil = false</code>, with <code>motiv_necomparabil</code>, when:</p>
+<table>
+<thead>
+<tr>
+<th>Reason</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pret_unitar_lipsa_sau_nepozitiv</code></td>
+<td>No unit price, or ≤ 0</td>
+</tr>
+<tr>
+<td><code>cantitate_lipsa_sau_nepozitiva</code></td>
+<td>No quantity, or ≤ 0</td>
+</tr>
+<tr>
+<td><code>unitate_nerecunoscuta</code></td>
+<td><code>itemMeasureUnit</code> not in <code>data/um_map.yml</code>. <strong>Never guessed.</strong></td>
+</tr>
+<tr>
+<td><code>unitate_de_tip_pachet_fara_marime_cunoscuta</code></td>
+<td>Bundle unit (<code>set</code>, <code>pachet</code>, <code>cutie</code>, <code>lot</code>, <code>serviciu</code>) with no recoverable pack size</td>
+</tr>
+<tr>
+<td><code>descriere_de_tip_pachet_fara_marime_cunoscuta</code></td>
+<td>Declared unit is a count, but the description names a bundle</td>
+</tr>
+</tbody>
+</table>
+<p>The last rule exists because buyers routinely book a bundle under a count unit. A real
+record reads <code>PACHET ALIMENTAR</code>, quantity 1, unit <code>bucata</code>, 102.96 RON — the unit field
+claims a piece, while the description says it is a package of assorted food. Trusting the
+unit field alone under-reports bundles, so the description is checked as well.</p>
+<h2>Units are UN/CEFACT codes</h2>
+<p>Each canonical unit carries its <strong>UN/CEFACT Recommendation 20</strong> common code (<code>buc</code> →
+<code>H87</code> "piece", <code>mp</code> → <code>MTK</code> "square metre"), emitted as <code>unit.scheme: "UNCEFACT"</code> and
+<code>unit.id</code> in OCDS. Unrecognised units carry <strong>no</strong> code — an absent <code>unit.id</code> is honest,
+a guessed one is not. Codes were validated against the codelist published by ProZorro
+(<code>ProzorroUKR/standards</code>, Apache-2.0); see <code>docs/prior-art.md</code>.</p>
+<p>The bundle rule is the most consequential. "1 set" describes an unknown quantity of
+goods. Comparing one buyer's set against another's is meaningless, and because bundles
+are common this rule removes a large share of rows from benchmarks. That is the correct
+outcome, not a defect.</p>
+<p>Unrecognised units are a <strong>backlog signal</strong>: each one is a missing entry in
+<code>data/um_map.yml</code>, and adding it makes more data comparable. Contributions welcome.</p>
+<h2>Aggregation</h2>
+<p>For a benchmark over (CPV × unit × county × period):</p>
+<ul>
+<li>Only <code>comparabil = true</code> rows.</li>
+<li>Outliers trimmed at the 1st and 99th percentiles of the group before statistics.</li>
+<li><strong>Median, not mean.</strong> Procurement prices are heavily right-skewed.</li>
+<li>Dispersion reported as the p90/p10 ratio.</li>
+<li>Minimum <code>n = 5</code> to publish a group; below that, suppressed.</li>
+<li>Published figures are <strong>nominal</strong>, with the deflator published alongside them so any
+  year can be expressed in another year's money. See "Comparing money across years".</li>
+</ul>
+<h2>Risk indicators</h2>
+<p>Implemented in <code>src/achizitii/indicators.py</code>, over the data.gov.ro bulk exports.</p>
+<p>Every indicator declares four things, and will not run without them:</p>
+<ul>
+<li><strong><code>legal_basis</code></strong> — the provision the pattern relates to. A finding without one is not
+  defensible and should not be published.</li>
+<li><strong><code>rationale</code></strong> — what behaviour the rule is designed to surface.</li>
+<li><strong><code>applies_to</code></strong> — the scope. A rule never fires outside it.</li>
+<li><strong><code>valid_from</code> / <code>valid_to</code></strong> — thresholds and rules change over time. Applying the
+  2023 ceiling to 2018 data would manufacture findings, so a rule outside its validity
+  window is skipped, loudly, rather than run.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Pattern</th>
+<th>Legal basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prag-01</code></td>
+<td>Values clustering immediately below the direct-acquisition ceiling</td>
+<td>art. 7</td>
+</tr>
+<tr>
+<td><code>fara-competitie-01</code></td>
+<td>Awards with no prior notice published</td>
+<td>art. 104</td>
+</tr>
+<tr>
+<td><code>divizare-01</code></td>
+<td>Repeat purchases, same object and supplier, short window, cumulative value above the ceiling</td>
+<td>art. 11</td>
+</tr>
+<tr>
+<td><code>dependenta-01</code></td>
+<td>One supplier taking a dominant share of an authority's budget</td>
+<td>art. 2</td>
+</tr>
+<tr>
+<td><code>modificare-01</code></td>
+<td>Contract value increased after signature</td>
+<td>art. 221</td>
+</tr>
+<tr>
+<td><code>ofertant-unic-01</code></td>
+<td>Exactly one offer received</td>
+<td>art. 2</td>
+</tr>
+<tr>
+<td><code>estimare-01</code></td>
+<td>Awarded value far above the authority's own estimate</td>
+<td>art. 2 and art. 9</td>
+</tr>
+<tr>
+<td><code>incetare-01</code></td>
+<td>Supplier struck off or in liquidation on the award date</td>
+<td>art. 167</td>
+</tr>
+</tbody>
+</table>
+<p>All references are to Legea 98/2016.</p>
+<h3>Deterministic by design</h3>
+<p>Every indicator is arithmetic over public fields. No language model is involved and none
+is needed. This is not a limitation — it is what makes a finding checkable by the
+authority it names, and what allows the exact query to be published alongside the result.</p>
+<h3>The ceiling is detected from the data, not taken on trust</h3>
+<p>Establishing the direct-acquisition ceiling from the legal text alone proved unreliable.
+Freely available consolidations of Legea 98/2016 disagree: the originally published form
+gives 132,519 lei for goods/services and 441,730 for works; secondary sources quote
+270,120 and variously 900,000 <strong>or</strong> 900,400; dated consolidations sit behind paywalls.
+A wrong ceiling does not weaken the indicator — it <em>invents findings</em>.</p>
+<p>So the operative ceiling is recovered from the distribution itself. Exceeding it is
+unlawful, so the density of direct-acquisition values collapses at it. <code>detect_ceiling_sql</code>
+scans candidate cutoffs and scores each by the ratio of mass in the 20,000 lei below to
+the 20,000 lei above, requiring at least 100 acquisitions below and a ratio of 8:1.</p>
+<p>Measured on H1 2026 goods/services:</p>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Cliff at</th>
+<th>Max observed</th>
+<th>Below</th>
+<th>Above</th>
+<th>Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026</td>
+<td>274,000</td>
+<td>273,036.00</td>
+<td>1,755</td>
+<td>37</td>
+<td><strong>47.4 : 1</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Open discrepancy, not yet resolved.</strong> The declared ceiling is 270,120, but 37 records
+sit above it and the largest is 273,036. Possible explanations — a ceiling raised for
+2026, works contracts misclassified as goods/services, VAT or rounding treatment, or
+genuinely unlawful records — have <strong>not</strong> been distinguished. Until they are, the
+detected value is reported alongside the declared one and neither is presented as
+settled. <code>prag-01</code> continues to use the declared legal figure, because that is the one
+with a legal basis behind it.</p>
+<p>Detection returns nothing when no sharp cliff exists, which is the correct answer for a
+year whose ceiling cannot be established.</p>
+<h3>Thresholds are dated and verified</h3>
+<p>The direct-acquisition ceiling is held as a dated schedule, not a constant. The
+2023-01-01 value (270,120 RON for goods/services) is confirmed empirically: in the Q1
+2026 export, direct acquisitions stop dead at that figure — 8 records above it across
+the whole 270,120–280,000 range, against 377 in the 1,120 RON immediately below, and
+236 priced at exactly 270,000.</p>
+<p><strong>Earlier ceilings are not yet verified against the legal text, so the rule does not run
+on those years.</strong> A wrong threshold invents findings; refusing to run is the correct
+failure mode.</p>
+<h3>Interpretation limits</h3>
+<p>Each indicator has innocent explanations, and the output must never imply otherwise:</p>
+<ul>
+<li>Bunching below a ceiling can reflect a genuine internal budget limit.</li>
+<li>Awards without a notice are lawful in the circumstances art. 104 sets out.</li>
+<li>Repeat same-day purchases may be distinct lots of one real programme.</li>
+<li>A 90% supplier share may mean one qualified firm in a small local market.</li>
+<li>Contract increases are lawful within the limits of art. 221, and may reflect indexation.</li>
+</ul>
+<p>The correct reading of any finding is <strong>"this warrants review"</strong>, never "this is fraud".</p>
+<h3>Correction: single-bidder rate IS computable, for part of the archive</h3>
+<p>An earlier version of this document stated that single-bidder rate was not computable
+from the bulk exports. <strong>That was wrong.</strong> The 2016–2018 exports carry
+<code>NumarOfertePrimite</code> — the number of offers received — on every contract row. It was
+dropped from later exports, so <code>ofertant-unic-01</code> is limited to the years that publish
+it, expressed as a data requirement rather than a hardcoded window so the rule resumes
+automatically if the column returns.</p>
+<p>Measured on 2016–2017: 28,646 contracts received exactly one offer, against 24,034 with
+two and 25,386 with three.</p>
+<h3>Correction: the 2022 estimate gap was ours, not the publisher's</h3>
+<p>An earlier version recorded that contracts stopped carrying their own estimate part-way
+through 2022, and reasoned about why the publisher might have changed practice mid-year.
+<strong>That was wrong.</strong> One quarter of 2022 heads the column <code>VALOARE_ESTIMATA_RON</code> where the
+rest of the year writes <code>Valoare estimata</code>, and the alias was missing — so the column
+read as 40.6% null and the explanation was invented to fit an artefact of our own
+ingest. With the alias added, 2022 is 99.7% populated and <code>estimare-01</code> rises from 24,543
+findings to 42,631.</p>
+<p>The column genuinely does disappear from 2023 onwards. The lesson kept here is that a
+plausible story about the source is not evidence: the ingest was never checked against
+the file's actual headers before the explanation was written down.</p>
+<h3>Not yet implemented</h3>
+<ul>
+<li><strong>Corruption Risk Index</strong> composite scoring (Government Transparency Institute). The
+  intent remains to adopt a published methodology rather than invent a score, but the
+  missing bidder data blocks a faithful implementation today.</li>
+<li><strong>Brand-without-"sau echivalent"</strong> in technical specifications (art. 156). The
+  gazetteer and matcher are built and tested, but the indicator is <strong>deliberately not
+  shipped</strong>, for reasons stronger than "the documents are Stage 4". See below.</li>
+<li><strong>Ownership links</strong> between suppliers and officials. Requires ONRC.</li>
+</ul>
+<h3>Why there is no brand indicator (a measured negative result)</h3>
+<p><code>data/branduri.yml</code> and <code>achizitii.produs</code> were built to support an art. 156 check:
+a technical specification that names a make without "sau echivalent" restricts
+competition unlawfully. Running the matcher over the direct-acquisition archive before
+writing the indicator showed it should not be published at all.</p>
+<p>Measured on a 300,000-row sample of <code>denumire</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Measure</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Descriptions naming at least one brand</td>
+<td>6.2% — about <strong>1.66 million</strong> rows archive-wide</td>
+</tr>
+<tr>
+<td>...that are consumables, parts or repairs</td>
+<td><strong>44.7%</strong></td>
+</tr>
+<tr>
+<td>...that say "sau echivalent"</td>
+<td><strong>0.04%</strong> (7 rows)</td>
+</tr>
+</tbody>
+</table>
+<p>Each number kills a different assumption.</p>
+<p><strong>The qualifier is absent because the document is absent.</strong> "Sau echivalent" appears in
+0.04% of brand-naming descriptions — not because buyers omit it, but because a direct
+acquisition has no <em>documentație de atribuire</em> to omit it from. <code>denumire</code> averages 89
+characters; it is an object title, not a technical specification. So
+<code>brand_without_equivalent</code> would return the same rows as <code>find_brands</code>, and the
+indicator would reduce to "mentions a brand" while being <em>presented</em> as a legal finding.</p>
+<p><strong>Naming the make is frequently the lawful option.</strong> Nearly half the hits are toner for
+an existing printer, a part for a specific vehicle, or a service on a named machine —
+"Cartus toner Canon CRG-737", "Reparatie Ford Focus". Art. 156(2) permits identifying a
+make where the object cannot otherwise be described precisely. Flagging these would
+invert the law it claims to enforce.</p>
+<p><strong>The scale is the accusation.</strong> 1.66 million rows, each naming a real contracting
+authority and a real supplier, is not an indicator — it is an unreviewable list. It
+would also swamp the six indicators that <em>are</em> defensible.</p>
+<p>The matcher is kept, because the gazetteer's other purpose stands: brand is the
+strongest available signal for splitting a CPV code into price-comparable groups. If
+tender documents are ingested at Stage 4, the check becomes meaningful — there the
+qualifier is genuinely expected, and its absence genuinely means something.</p>
+<p>The general rule this project takes from it: <strong>an indicator must be tested against the
+data before its legal basis is written down.</strong> A provision that reads perfectly can
+still have no computable counterpart in the available fields.</p>
+<h3>A populated column is not a meaningful one</h3>
+<p>Every data defect found in this project until now was an <em>absence</em>: an unmatched alias
+gives a column of NULLs, a renamed resource loses a year. <code>validate</code> was built around
+that shape, comparing each column's null rate against its own history.</p>
+<p>It cannot see a column that is full of the wrong thing.</p>
+<p>The exports before 2021 wrote the internal <code>CPV_CODE_ID</code> into the CPV <strong>name</strong> column,
+so <code>39831240</code> read <code>15113</code> instead of <em>Produse de curatenie</em>. That is <strong>14,074,968 rows,
+56% of every labelled row in the archive</strong>, and 100% of 2016 through 2020. It passed
+every validation pass and reached the published site, where a quarter of the CPV table
+showed a number where the product name belongs — anyone searching "detergent" for those
+years found nothing.</p>
+<p>Two things came out of it:</p>
+<ul>
+<li><strong>The archive repairs itself.</strong> The same code carries a proper label from 2021
+  onwards, so no external vocabulary is needed. 8,572 codes recover a name; 510 never
+  do, and those are published NULL rather than filled with a guess.</li>
+<li><strong><code>validate</code> now checks label columns for being meaningless, not merely absent.</strong> The
+  known-defect years are declared, so the check stays useful: a permanently failing
+  validation teaches everyone to ignore it, and only a <em>new</em> year appearing is worth an
+  alarm.</li>
+</ul>
+<p>One detail is worth recording because it nearly halved the fix. Matching <code>^[0-9]+$</code>
+finds 7.4M rows and misses every value written <code>11728.0</code> — precisely half the problem,
+while looking like a fix that worked. The pattern must allow a decimal part.</p>
+<h3>Ambiguous brand tokens</h3>
+<p>Brand matching is word-boundary exact, but several real brands are spelled like ordinary
+Romanian words. Bare matching was right only 24.5% of the time for <code>man</code> and 43.7% for
+<code>lg</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Plausible</th>
+<th>What it usually is instead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>man</code></td>
+<td>24.5%</td>
+<td><em>manual</em> — "DET.MAN.20KG", "GAR.MAN.+SILD"</td>
+</tr>
+<tr>
+<td><code>lg</code></td>
+<td>43.7%</td>
+<td><em>legume</em> — "LEUSTEAN RO. LG. C.I"</td>
+</tr>
+<tr>
+<td><code>braun</code></td>
+<td>63.9%</td>
+<td>the colour — "PROSOP ISABEL BRAUN 70X100CM"</td>
+</tr>
+<tr>
+<td><code>bucovina</code></td>
+<td>68.4%</td>
+<td>the region — "Centrul Cultural Bucovina"</td>
+</tr>
+<tr>
+<td><code>tesa</code></td>
+<td>70.4%</td>
+<td>the staff category <em>tehnic, economic, socio-administrativ</em></td>
+</tr>
+<tr>
+<td><code>dorna</code></td>
+<td>85.4%</td>
+<td>the town — "Transport ... la Vatra Dorna si retur"</td>
+</tr>
+</tbody>
+</table>
+<p>These now count only when the description also names something the brand actually makes,
+which removed 934 false matches from a 600,000-row sample. The trade is recall for
+precision, which is the right direction when the output feeds price groups: a wrongly
+attributed brand splits or merges groups that should not be.</p>
+<h3>Comparing money across years</h3>
+<p>Romanian prices rose 62% between 2016 and 2025 (HICP 98.93 → 160.06), so comparing
+those years without adjusting shows inflation as much as procurement.</p>
+<p>The index is <strong>published, not applied</strong>. <code>site/data/deflator.parquet</code> carries one row per
+year and the site multiplies at query time, which means published figures stay exactly as
+published, the reader chooses the base year, and the arithmetic is visible in the query
+panel rather than baked into a stored number.</p>
+<p>Source: Eurostat <code>prc_hicp_aind</code>, Romania, annual average, 2015=100 — chosen over the
+national CPI because it is an open documented API and methodologically consistent across
+the whole series. Mixing HICP with the national index would create a step that looks like
+inflation. The values are checked into <code>data/ipc.yml</code> rather than fetched at build time,
+so a Eurostat revision arrives as a reviewable commit instead of silently changing every
+figure on the site.</p>
+<p><strong>2026 has no index and is not extrapolated.</strong> Selecting a base year blanks 2026's
+monetary columns rather than leaving them nominal among adjusted ones — mixing the two in
+a single column would be worse than an obvious gap.</p>
+<h3>Correction: an unscreened year is not an unbounded one</h3>
+<p>Screening values against the legal ceiling has now been wrong in both directions, and
+both errors were mine.</p>
+<p>First, a single ceiling was applied to every category, so works were judged against the
+goods figure. That excluded 52,306 works acquisitions — 12% of 2019's works — as
+"impossible" when they were very likely lawful.</p>
+<p>Fixing that introduced the opposite error. Works have no established ceiling before 2022,
+so those years became screened against <strong>nothing</strong>, and a 2016 record of
+<strong>543,595,445,218 RON</strong> — a school asphalting job, 98% of that year's works total —
+entered the published sum. The real figure is about 1.2 billion.</p>
+<p>The bound now used: a value above the most permissive ceiling the law has <strong>ever</strong> set
+for its category cannot be a lawful direct acquisition in any year. That constrains the
+unscreened years without asserting a ceiling we cannot evidence — we are not claiming to
+know the 2016 works ceiling, only that 543 billion exceeds every ceiling this law has
+ever had. Archive-wide this excludes 6,027 rows (0.02%) carrying 30 trillion RON.</p>
+<h3>Contract values, and why frameworks carry no total</h3>
+<p>A framework agreement (<em>acord-cadru</em>) publishes a <strong>ceiling</strong> — the maximum callable over
+the agreement's life — not money spent. For a multi-supplier framework that ceiling is
+repeated on <strong>every supplier's row</strong>: the four largest values in the archive are the same
+177,930,419,250 RON, one authority, four pharmaceutical wholesalers, one agreement.</p>
+<p>Summing framework rows therefore multiplies a single ceiling by the number of suppliers,
+and then double-counts again against the call-offs placed under it. So <code>contracte_an</code>
+publishes frameworks with a count and a median and <strong>no total at all</strong>. Money actually
+committed is the call-offs (<em>contract subsecvent</em>) plus ordinary contracts.</p>
+<table>
+<thead>
+<tr>
+<th>Nature</th>
+<th>Rows</th>
+<th>Published total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plafon_acord_cadru</code></td>
+<td>2,080,764</td>
+<td>none — a ceiling, repeated per supplier</td>
+</tr>
+<tr>
+<td><code>contract_subsecvent</code></td>
+<td>1,171,118</td>
+<td>yes — called off under a framework</td>
+</tr>
+<tr>
+<td><code>contract</code></td>
+<td>394,424</td>
+<td>yes — ordinary contract</td>
+</tr>
+<tr>
+<td><code>nedeterminat</code></td>
+<td>954</td>
+<td>yes, flagged</td>
+</tr>
+</tbody>
+</table>
+<p>The classification tests for call-offs <strong>before</strong> frameworks, because a call-off row also
+carries framework wording; the other order would file every call-off as a ceiling.</p>
+<p><strong>Extremes are disclosed, not excluded.</strong> Unlike a direct acquisition, a public contract
+has no legal ceiling — that is what distinguishes it — so nothing here can be called
+impossible on legal grounds. But 301 rows (0.076%) carry 40% of the ordinary-contract
+total, and a reader given only a sum would effectively be reading those rows. Each row
+therefore publishes the total, the total excluding values above 1 billion RON, and the
+count of such values, side by side.</p>
+<h3>Reading the law before writing the indicator</h3>
+<p><code>incetare-01</code> exists because the exclusion grounds were read rather than assumed. The
+consolidated text of Legea 98/2016 (legislatie.just.ro) settles which article applies:</p>
+<ul>
+<li><strong>art. 164</strong> — exclusion for <em>criminal convictions</em>. Not this.</li>
+<li><strong>art. 165</strong> — exclusion for <em>unpaid taxes</em>, established by a final judicial or
+  administrative decision. Also not this: a company can be declared fiscally inactive
+  for failing to file returns while owing nothing.</li>
+<li><strong>art. 167(1)(b)</strong> — <em>"se află în procedura insolvenței sau în lichidare, în
+  supraveghere judiciară sau în încetarea activității"</em>. This one.</li>
+</ul>
+<p>So <strong>fiscal inactivity alone is not a listed exclusion ground</strong>, and the 21,327 awards to
+fiscally inactive suppliers are published as profile data, not as findings. What art.
+167(1)(b) does cover is strike-off and liquidation, which is what the indicator reports.</p>
+<p><strong>Mergers and divisions are excluded.</strong> <code>DIZOLVARE FARA LICHIDARE(FUZIUNE)</code> is
+reorganisation, not cessation — the business continues under the absorbing entity.
+Including it reported Orange Romania Communications as a defunct supplier, which is how
+the distinction was noticed.</p>
+<p><strong>The fiscal-code join is corroborated by name.</strong> Matching on CUI alone agrees with the
+supplier name for 88.5% of companies; for the rest the code points at a differently-named
+business — sometimes a rename (<em>Prisum International Trading</em> → <em>PRISUM HEALTHCARE</em>),
+sometimes something else entirely (<em>ALLERGY-FARMA</em> against <em>UNION BASE LIVESTOCK GROUP</em>).
+A 90%-reliable join is fine for a county backfill and not fine for a finding that names an
+authority, so a row is published only when the names agree too. That discards 297 of 1,010
+candidates and leaves <strong>713</strong>.</p>
+<p><strong>Known blind spot.</strong> ANAF reports the company's <em>current</em> state. A supplier suspended in
+2018 and since resumed now reads <code>RELUARE ACTIVITATE</code>, so awards during that historic gap
+are missed. The error is one-directional — false negatives, never false positives.</p>
+<h3>Where the money goes geographically</h3>
+<p>Neither county is in the procurement exports: supplier locality is missing on 77% of
+rows, and the buyer's county is never given at all. Enriching <strong>both</strong> sides from ANAF
+places <strong>97.9%</strong> of the archive (26,101,780 awards) geographically.</p>
+<p><strong>58.0% of awards go to a supplier registered in the buyer's own county.</strong> The spread is
+wide — Tulcea 72.7%, Ilfov 21.0% — and Ilfov is the sanity check: it surrounds Bucharest,
+so its authorities naturally buy from Bucharest suppliers.</p>
+<p>This is <strong>descriptive, not an indicator</strong>. Buying locally is lawful and frequently
+sensible, and there is no article that makes a local share suspicious. The table carries
+counts and values with no threshold and no flag, and a test fails if a column ever
+appears that scores or ranks counties without a legal basis behind it.</p>
+<p>Worth noting for anyone reading it: awards and value diverge. Brăila keeps 46.2% of its
+awards local but 84.1% of its value, so the large contracts stay local while the small
+ones do not.</p>
+<h3>Two checks that were considered and NOT built</h3>
+<p>Both would have been easy and neither has a legal basis, so neither ships as an indicator.</p>
+<p><strong>Fiscal inactivity.</strong> 21,327 awards went to suppliers fiscally inactive on the award
+date. But art. 165 covers <em>unpaid taxes established by a final decision</em>, and a company
+can be declared inactive for failing to file returns while owing nothing. Published as
+profile data instead.</p>
+<p><strong>Company age.</strong> 40,714 awards went to companies registered less than 90 days earlier —
+a recognisable shell-company pattern. Art. 173 gives the authority the <em>right to request</em>
+proof of registration; it does not make youth an exclusion ground, and a new company is
+entitled to compete. The registration date is published so anyone can look; no finding is
+generated from it.</p>
+<h3>One institution, every signal</h3>
+<p>The site can show all eight indicators filtered to a single contracting authority. It is
+the view a journalist actually wants — "what has been raised about this institution" —
+and it is also the one most easily misread, so it never reports a count on its own.</p>
+<p>A large hospital generates more findings than a village school because it buys more. The
+view therefore states the denominator beside the count:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Signals</th>
+<th>Direct acquisitions</th>
+<th>Rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Institutul Clinic Fundeni</td>
+<td>189</td>
+<td>28,802</td>
+<td>0.66%</td>
+</tr>
+<tr>
+<td>Comuna Botiz</td>
+<td>18</td>
+<td>1,730</td>
+<td>1.04%</td>
+</tr>
+</tbody>
+</table>
+<p>Read as raw counts, Fundeni looks ten times worse. Read against volume, Botiz has the
+higher rate. Neither number is an accusation, and the view says so — but publishing the
+first without the second would have invited exactly the wrong conclusion.</p>
+<h2>Corrections</h2>
+<p>Errors are expected. The process is documented in full in
+<a href="replica.html"><code>CORRECTIONS.md</code></a>, in Romanian and English, with three issue templates:
+a data correction, a right of reply for named entities, and a data-quality report for
+systematic problems.</p>
+<p>Corrections are applied <strong>to the pipeline</strong>, not to the published file, so they survive
+regeneration. They are logged in <code>CHANGELOG.md</code> and the affected release is re-tagged.
+Initial response within 5 working days, resolution within 30.</p>
+<p>Contracting authorities and suppliers have a standing right of reply. A contested record
+is annotated with the response; we do not remove accurate public data, and we do not
+leave a disputed figure unannotated.</p>
+<h2>Comparisons that are invalid</h2>
+<p><strong>Never aggregate across CPV codes.</strong> The median unit price of every item measured in
+<code>buc</code>, grouped by county, measures <em>what each county bought</em>, not <em>what it paid</em>. In a
+sample run this produced a county median of 4994 RON against another's 1.80 RON — the
+first had bought computers, the second bottled water. The figure is arithmetically
+correct and completely meaningless.</p>
+<p>Every comparison must therefore hold constant, at minimum: <strong>CPV code + canonical unit +
+pack size</strong>. The web UI defaults to a specific CPV for this reason and warns when no CPV
+filter is set.</p>
+<p>Even within one CPV, equivalence is not guaranteed — <code>30213100</code> covers both a budget
+netbook and a mobile workstation. Description-level matching (Stage 1) is required before
+within-CPV differences can be attributed to price rather than specification.</p>
+<h2>Known limitations</h2>
+<ul>
+<li><strong>Stage 0 covers direct acquisitions only.</strong> Open tenders keep line items inside the
+  <em>caiet de sarcini</em>; those are not yet parsed.</li>
+<li><strong>2026 cannot be deflated.</strong> Eurostat has not published the index for it, so 2026
+  figures are nominal even when a base year is selected, and appear blank rather than
+  unadjusted.</li>
+<li><strong>CPV is coarse.</strong> One CPV code spans a €300 netbook and a €4,000 workstation, so
+  CPV alone does not make two items equivalent. CPV plus unit plus description matching
+  is required; the description layer is Stage 1.</li>
+<li><strong>County is the authority's registered county</strong>, not necessarily the delivery location.</li>
+<li><strong>VAT treatment is not yet established</strong> in the source data and may vary between
+  records.</li>
+</ul>
+</article>
+</main>
+<footer>
+  <nav aria-label="Pagini / Pages"><a href="./"><span data-lang="ro" lang="ro">Date</span><span data-lang="en" lang="en">Data</span></a> · <a href="metodologie.html" aria-current="page"><span data-lang="ro" lang="ro">Metodologie</span><span data-lang="en" lang="en">Methodology</span></a> · <a href="replica.html"><span data-lang="ro" lang="ro">Drept la replică</span><span data-lang="en" lang="en">Right of reply</span></a> · <a href="privacy.html"><span data-lang="ro" lang="ro">Confidențialitate</span><span data-lang="en" lang="en">Privacy</span></a> · <a href="https://github.com/CristianNichifor/open-procurement"><span data-lang="ro" lang="ro">Cod sursă</span><span data-lang="en" lang="en">Source code</span></a></nav>
+</footer>
+</body>
+</html>
