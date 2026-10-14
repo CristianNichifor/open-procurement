@@ -28,5 +28,7 @@ def test_the_shared_renderer_marks_and_explains_thin_groups() -> None:
     assert "Number(row.n) < SLAB" in body, "the renderer does not look at the group size"
     assert "'slab'" in body and "mediana_ron" in body
     assert "nota-slab" in body, "the explanation is not rendered with the table"
+    assert "td.append(' *')" in body and "c === 'denumire_key'" in body, "no `*` on thin rows"
+    assert "`* Rapoartele în gri" in body, "the one note must explain the `*`"
     panorama = source.index("if (preturi && preturi.numRows)")
     assert "nota-slab" not in source[panorama:], "the front door keeps its own copy"

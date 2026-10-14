@@ -252,7 +252,8 @@ Test: `tests/test_ux_guidelines.py` › `test_the_group_size_filter_has_a_plain_
 - Given any table whose rows carry a product, a median and the percentiles, when a group
   rests on fewer than 10 prices, then its median cell is greyed (`td.slab`) and one note
   under the table says the greyed figures are only indicative; the threshold is one
-  module-level constant shared with the front door.
+  module-level constant shared with the front door; the product cell carries a `*`
+  (design screen 03), and the note begins with `*` so the mark is explained once.
 - Given a re-render of the same table (paging, sorting), then the note appears once.
 
 Test: `tests/test_site_thin.py`; `tests/browser/ux.spec.js` („thin groups marked”).

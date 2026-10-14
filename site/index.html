@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-xm69Hw7o7Gk+yPTf6PPzuFIPYXG/t+Xsv/CpjwF+aNk=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-CfKA0xUGgINGf1t0vEg/rQlifFr5lAt0tybJAm/tyPM=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -1769,8 +1769,11 @@ function fillTable(el, table, {
       if (pret && (c === 'denumire_key' || c === 'mediana_ron')) {
         td.classList.add(c === 'denumire_key' ? 'c-produs' : 'c-mediana');
       }
-      if (pret && (c === 'mediana_ron' || c === 'de_cate_ori') && Number(row.n) < SLAB) {
-        td.classList.add('slab');
+      if (pret && Number(row.n) < SLAB) {
+        // Greyed median, and a `*` on the product so the mark survives a phone's two-line
+        // row and a screen reader's linear read (design screen 03).
+        if (c === 'mediana_ron' || c === 'de_cate_ori') td.classList.add('slab');
+        if (c === 'denumire_key') td.append(' *');
       }
       const extra = cellClass ? cellClass(row, c) : null;
       if (extra) td.classList.add(extra);
@@ -1797,7 +1800,7 @@ function fillTable(el, table, {
   if (wrap && pret && table.toArray().some((r) => Number(r.n) < SLAB)) {
     const nota = document.createElement('p');
     nota.className = 'nota-slab';
-    nota.textContent = `Rapoartele în gri se sprijină pe mai puțin de ${SLAB} prețuri `
+    nota.textContent = `* Rapoartele în gri se sprijină pe mai puțin de ${SLAB} prețuri `
       + 'și sunt doar orientative.';
     wrap.after(nota);
   }
