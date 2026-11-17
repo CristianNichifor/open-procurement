@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-eoKBcyqfAgTl0f+C3TWw0BOKGKJ5b8WJXM05mpH2t8c=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KJmJbGtHicVx9x4jVydric4ifKvjUq+gWr8HOyZgZaI=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -3185,7 +3185,10 @@ function selectTab(key, ind) {
   if (manifest.panorama && !new URLSearchParams(location.hash.replace(/^#/, '')).get('v')) {
     try {
       panoramaData = await (await fetch(url(manifest.panorama.file))).json();
-      selectTab('panorama');
+      // Awaited: the draw ends by clearing the status line, and unawaited it did so just
+      // after the boot message below was written, so the greyed-out tabs sat there for
+      // the whole engine download with nothing saying why.
+      await selectTab('panorama');
       earlyDrawn = true;
     } catch {
       // A missing or malformed file simply means the old path: the engine loads and the
