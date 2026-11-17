@@ -157,4 +157,6 @@ def test_the_hint_does_not_call_the_page_a_table(source: str) -> None:
     """It said "Acest tabel nu se filtrează după text" on a page with no table, and on the
     meetings register, which has a feed."""
     assert "Acest tabel nu se filtrează" not in source
-    assert "Această pagină nu se filtrează după text" in source
+    assert "Căutați o instituție sau o firmă după denumire ori CUI" in source, (
+        "the hint should say what can be searched"
+    )

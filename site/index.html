@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-PZsycmDv8EedQ4dNpdxs/MQJLuT4Tl0XO+jFQnW0qok=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0Pm//wAUwrrPouC2HD3Tmx81UpII/I4P0hWBQU2GLBU=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -468,8 +468,9 @@
       <input id="q" class="civic-input" autocomplete="off"
              role="combobox" aria-autocomplete="list" aria-expanded="false"
              aria-controls="sugestii"
-             aria-label="Caută o autoritate, o firmă, un CUI sau un produs"
-             placeholder="Caută o autoritate, o firmă, un CUI sau un produs…">
+             aria-label="Caută o instituție sau o firmă, după denumire ori CUI"
+             aria-describedby="hint"
+             placeholder="Instituție, firmă sau CUI…">
       <ul id="sugestii" role="listbox" aria-label="Sugestii" hidden></ul>
     </div>
     <button id="run" class="civic-button civic-button--primary" type="button" disabled>Caută</button>
@@ -2972,7 +2973,7 @@ function selectTab(key, ind) {
   const search = key === 'indicatori' ? null : VIEWS[key].search;
   $('q').placeholder = search
     ? `Caută după ${search}…`
-    : 'Caută o autoritate, o firmă sau un CUI…';
+    : 'Instituție, firmă sau CUI…';
   $('hint').textContent = search
     ? ''
     // Names the tab the reader will actually land on. "Autorități" stopped being a tab
@@ -2980,7 +2981,14 @@ function selectTab(key, ind) {
     // worse than saying nothing.
     // "Acest tabel" was wrong on the front door, which has no table, and on the
     // meetings register, which has a feed.
-    : 'Această pagină nu se filtrează după text; o căutare vă duce la Entități.';
+    // Says what can be searched, with an example, rather than how the page works: a
+    // visitor deciding what to type needs the first, and the placeholder is cut short
+    // on a phone. Products are priced on another tab, so the hint says where — only when
+    // this build publishes that tab.
+    : 'Căutați o instituție sau o firmă după denumire ori CUI (de exemplu „Fundeni”); '
+      + 'căutarea vă duce la Entități, în fișa ei.'
+      + (manifest && manifest.preturi_unitare
+        ? ' Prețul unui produs se caută în fila Prețuri unitare.' : '');
   $('subnav').hidden = key !== 'indicatori';
   // The grouped views share one tab, so the selector shows for any of them and keeps
   // itself in step when a view is reached some other way — the hero search falls back to
