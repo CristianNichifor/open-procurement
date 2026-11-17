@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0Pm//wAUwrrPouC2HD3Tmx81UpII/I4P0hWBQU2GLBU=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-eoKBcyqfAgTl0f+C3TWw0BOKGKJ5b8WJXM05mpH2t8c=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -102,7 +102,8 @@
          cursor:pointer; font-weight:500; }
   #run:disabled { opacity:.5; cursor:progress; }
   .tabs button[aria-selected="true"] { font-weight:600; }
-  #status { color:var(--muted); font-size:.85rem; margin:.75rem 0; }
+  /* overflow-wrap: an error can carry a long URL, which widened a 390px page by 140px. */
+  #status { color:var(--muted); font-size:.85rem; margin:.75rem 0; overflow-wrap:anywhere; }
   /* Explanatory, not alarming. This line carries the methodology note for whichever tab
      is open — "a group is CPV + product + unit", "spending is not itself an indication" —
      and it was rendered in the warning colour on every one of them. If everything is
@@ -3047,10 +3048,21 @@ function selectTab(key, ind) {
   engine.catch(() => {});   // reported below, where it is awaited
   try {
     manifest = await (await fetch(url('manifest.json'))).json();
-  } catch {
-    status('Lipsește data/manifest.json. Rulează `achizitii publish` și servește folderul prin HTTP.');
-    // Nothing is coming: placeholder rows under an error read as "still loading".
+  } catch (err) {
+    console.error(err);
+    // A visitor meets this on a dropped connection, so it is written for them; the
+    // build instruction is for a contributor, who is on localhost or file://.
+    const dev = ['localhost', '127.0.0.1', ''].includes(location.hostname)
+      ? ' (Local: lipsește data/manifest.json — rulați `achizitii publish` sau '
+        + '`scripts/fetch_bundle.sh` și serviți folderul site/ prin HTTP.)' : '';
+    failed('Datele nu s-au putut încărca. Verificați conexiunea la internet și '
+      + `reîncercați.${dev}`, () => location.reload());
+    // Nothing is coming: placeholder rows under an error read as "still loading", and
+    // filters, CSV and a share link with no data behind them are buttons that do nothing.
     $('out').tBodies[0].innerHTML = '';
+    for (const el of [document.querySelector('.controls'), document.querySelector('.share'),
+      $('sql').closest('details')]) el.style.display = 'none';
+    $('run').disabled = true;
     return;
   }
   for (const an of [...(manifest.deflator?.ani ?? [])].reverse()) {
@@ -3229,9 +3241,11 @@ function selectTab(key, ind) {
     const local = location.protocol === 'file:'
       ? ' Pagina trebuie servită prin HTTP, nu deschisă ca fișier (file://).' : '';
     $('status').className = 'civic-error';
-    $('status').textContent = `Motorul de interogare nu a pornit (${err.message}). `
-      + `Fișierele lui vin de la ${ENGINE_HOST}: dacă rețeaua sau o extensie a browserului `
-      + `blochează acest domeniu, filtrele și căutarea nu sunt disponibile.${local}`
+    // The raw error stays in the console (logged above): a visitor cannot act on
+    // "Failed to fetch dynamically imported module", and its URL ran off a phone screen.
+    $('status').textContent = 'Filtrele și căutarea nu sunt disponibile acum: motorul de '
+      + `interogare nu s-a putut descărca de la ${ENGINE_HOST}. De obicei cauza este `
+      + `conexiunea sau o extensie a browserului care blochează acest domeniu.${local}`
       + (panoramaData ? ' Panorama de mai jos este calculată dinainte și este completă.' : '');
     $('status').append(' ', retryButton(() => location.reload()));
   }
