@@ -216,3 +216,16 @@ def test_the_signals_union_matches_a_code_as_a_code(source: str) -> None:
     assert "t.autoritate_cui = ${cui}" in body
     assert "t.autoritate_cui ILIKE" not in body, "a code is not a substring"
     assert "!cols.includes('furnizor_cui') && nameLike" in body
+
+
+def test_a_section_that_failed_is_not_reported_as_empty(source: str) -> None:
+    """A dropped connection used to read as a finding. Every failed query became `null`,
+    and `null` was drawn exactly like an empty answer: four failures showed "Nimic despre
+    „fundeni” în niciuna dintre cele 4 surse" and a file with one failure showed
+    "A cumpărat 0 RON". Observed in Chromium with the engine unable to read Parquet.
+    """
+    body = _body(source, "async function runDosar(", 9000)
+    assert "const lipsa = secs.filter((s) => by[s.id] === null).length;" in body
+    assert "if (lipsa === secs.length) throw" in body, "all failed is an error, not a miss"
+    assert "t === null ? 'Secțiunea nu s-a putut încărca.' : s.gol" in body
+    assert "by.cumparator === null ? lipsaFapt" in body, "a failed side has no total, not a zero"

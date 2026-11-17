@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KJmJbGtHicVx9x4jVydric4ifKvjUq+gWr8HOyZgZaI=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-CeMhpFhWT+k0DlFBMr+vwitRj3MVXeLNnP9ze3FK7TE=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -644,7 +644,9 @@ function busy(m) {
 }
 
 const $ = (id) => document.getElementById(id);
-const status = (m) => { $('status').className = 'civic-loading'; $('status').textContent = m; };
+const status = (m) => {
+  $('status').className = 'civic-loading'; $('status').textContent = m; $('status').title = '';
+};
 
 // Boot is a distinct state, not just another status line. Until the engine is up there
 // is nothing to query, so the tabs are disabled: previously a click during those seconds
@@ -665,6 +667,18 @@ const failed = (m, retry) => {
   $('status').className = 'civic-error';
   $('status').textContent = `${m} `;
   $('status').append(retryButton(retry));
+};
+// A query that failed, said for a reader. "Catalog Error: …" or "Failed to fetch" names
+// nothing they can act on; the usual cause is the connection, and the raw message stays in
+// the console and in the line's tooltip for anyone reporting it.
+const QUERY_FAILED = 'Rezultatul nu s-a putut încărca; de obicei cauza este o întrerupere '
+  + 'a conexiunii.';
+const queryFailed = (err) => {
+  console.error(err);
+  // Nothing is coming: a shimmer under an error reads as "still loading".
+  for (const tr of $('out').querySelectorAll('tr.skeleton')) tr.remove();
+  failed(QUERY_FAILED, run);
+  $('status').title = String(err && err.message || err);
 };
 const booting = (m) => { $('status').className = 'civic-loading boot'; $('status').textContent = m; };
 
@@ -2754,12 +2768,21 @@ async function runDosar() {
     || '';
   const judet = first(by.identitate, 'judet') || '';
   const found = secs.filter((s) => by[s.id] && by[s.id].numRows).length;
+  // A failed query is null; an empty answer is a table with no rows. Reading both as
+  // "nothing here" told a reader that an organisation had no purchases when the
+  // connection had simply dropped — an absence stated as a finding.
+  const lipsa = secs.filter((s) => by[s.id] === null).length;
+  if (lipsa === secs.length) throw new Error('nicio sursă a fișei nu a răspuns');
+  const nota = lipsa
+    ? ` ${lipsa} din ${secs.length} secțiuni nu s-au putut încărca; reîncercați pentru fișa completă.`
+    : '';
 
   // Nothing matched anywhere. The sections below still say so one by one — that is four
   // separate answers, and worth showing — but putting the typed text in an <h2> above a
   // strip of zeros presents a misspelling as though it were an organisation.
   if (!found) {
-    status(`Nimic despre „${term}” în niciuna dintre cele ${secs.length} surse.`);
+    if (lipsa) failed(`Nimic despre „${term}” în sursele care au răspuns.${nota}`, run);
+    else status(`Nimic despre „${term}” în niciuna dintre cele ${secs.length} surse.`);
   } else {
 
   cap.hidden = false;
@@ -2797,18 +2820,24 @@ async function runDosar() {
   // tables offer, and says so beside the figure rather than in the methodology.
   const sub = (t) => [`${nf(total(t, 'n'))} achiziții directe`, perioada(t),
                       rows(t).length ? 'lei nominali' : ''].filter(Boolean).join(' · ');
-  fapt('A cumpărat', `${ron(cumparat)} RON`, sub(by.cumparator));
-  fapt('A vândut', `${ron(vandut)} RON`, sub(by.furnizor));
+  // A side whose query failed has no total, not a total of zero.
+  const lipsaFapt = ['—', 'secțiunea nu s-a putut încărca'];
+  fapt('A cumpărat', ...(by.cumparator === null ? lipsaFapt
+    : [`${ron(cumparat)} RON`, sub(by.cumparator)]));
+  fapt('A vândut', ...(by.furnizor === null ? lipsaFapt
+    : [`${ron(vandut)} RON`, sub(by.furnizor)]));
   if (by.semnale !== undefined) {
     // Never "suspiciuni". A signal means "worth checking", and the card says so where
     // the number is, not three paragraphs away.
     const nSem = by.semnale ? by.semnale.numRows : 0;
     // 200 is the query's ceiling, not a count. Printing it bare would state a total the
-    // page does not know.
-    fapt('Semnale', nSem === 200 ? '200+' : nf(nSem), 'de verificat, nu de condamnat');
+    // page does not know. A section that did not load has no count at all.
+    if (by.semnale === null) fapt('Semnale', ...lipsaFapt);
+    else fapt('Semnale', nSem === 200 ? '200+' : nf(nSem), 'de verificat, nu de condamnat');
   }
   cap.append(dl);
-  status(`Fișă pentru „${nume}”: ${found} din ${secs.length} secțiuni au date.`);
+  if (lipsa) failed(`Fișă pentru „${nume}”: ${found} din ${secs.length} secțiuni au date.${nota}`, run);
+  else status(`Fișă pentru „${nume}”: ${found} din ${secs.length} secțiuni au date.`);
   }
 
   for (const s of secs) {
@@ -2825,7 +2854,7 @@ async function runDosar() {
     if (!t || !t.numRows) {
       const p = document.createElement('p');
       p.className = 'gol';
-      p.textContent = s.gol;
+      p.textContent = t === null ? 'Secțiunea nu s-a putut încărca.' : s.gol;
       box.append(p);
     } else {
       const fig = chartFor(s.chart, t);
@@ -2875,8 +2904,7 @@ async function run() {
     try {
       await runPanorama();
     } catch (err) {
-      failed(`Eroare: ${err.message}`, run);
-      console.error(err);
+      queryFailed(err);
     } finally {
       makeScrollableRegionsFocusable();
       $('run').disabled = false;
@@ -2887,8 +2915,7 @@ async function run() {
     try {
       await runDosar();
     } catch (err) {
-      failed(`Eroare: ${err.message}`, run);
-      console.error(err);
+      queryFailed(err);
     } finally {
       makeScrollableRegionsFocusable();
       $('run').disabled = false;
@@ -2900,8 +2927,7 @@ async function run() {
   try {
     render(await conn.query(sql));
   } catch (err) {
-    failed(`Eroare: ${err.message}`, run);
-    console.error(err);
+    queryFailed(err);
   } finally {
     makeScrollableRegionsFocusable();
     $('run').disabled = false;
