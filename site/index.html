@@ -2,7 +2,7 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-CeMhpFhWT+k0DlFBMr+vwitRj3MVXeLNnP9ze3FK7TE=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-HO+UgnMkMZCbUfrjGDSvOmZbZ46VrFuoAEqOme98tcQ=' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://extensions.duckdb.org; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="vendor/civic-ui/native.css">
 <title>Open Procurement — achiziții publice din România, interogabile în browser</title>
@@ -3178,6 +3178,10 @@ function selectTab(key, ind) {
     $('tabs').append(b);
   }
   $('aspect').addEventListener('change', () => selectTab($('aspect').value));
+  // Every tab is disabled until the engine is up, and on a phone the row scrolls sideways:
+  // with nothing in it to focus, a keyboard could not scroll it to read the tabs (axe:
+  // scrollable-region-focusable). The row itself takes focus until its tabs can.
+  $('tabs').tabIndex = 0;
 
   const semnale = manifest.indicatori || [];
   if (semnale.length) {
@@ -3232,6 +3236,7 @@ function selectTab(key, ind) {
     conn = await engine;
     ready = true;
     for (const b of $('tabs').children) b.disabled = false;
+    $('tabs').removeAttribute('tabindex');
     // A queued search is what the reader asked for last, so it wins over the address.
     if (boot.queued) {
       $('q').value = boot.queued;
