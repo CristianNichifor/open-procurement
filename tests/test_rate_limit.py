@@ -154,6 +154,34 @@ def test_both_caps_hold_together_at_the_default_settings() -> None:
         assert sum(1 for t in stamps if stamps[i] - 1.0 < t <= stamps[i]) <= 2
 
 
+@pytest.mark.parametrize("start", [600.37, 1500.61, 3700.13, 7800.29])
+def test_the_limiter_does_not_spin_when_the_clock_crosses_a_power_of_two(start: float) -> None:
+    """Every scheduled run from 2026-11-05 sat silent until the five-hour timeout killed it.
+
+    `wait()` set `t = oldest + window` and then looked for `oldest <= t - window`. Once
+    `oldest + window` passes a power of two the sum loses a bit, `t - window` can land just
+    under `oldest`, the reservation is never dropped and the loop spins with the lock held:
+    no request, no log line, no timeout. Runners start at an uptime of a few hundred
+    seconds, so a full weekday always walks through 1024, 2048 and 4096.
+    """
+    clock = FakeClock()
+    clock.now = start
+    limiter = _limiter(clock, max_rps=1.5, max_per_window=450, window=300.0, max_burst=2)
+    stamps: list[float] = []
+
+    def saturate() -> None:
+        stamps.extend(_stamps(limiter, clock, 4000))
+
+    worker = threading.Thread(target=saturate, daemon=True)
+    worker.start()
+    worker.join(timeout=20)
+    assert not worker.is_alive(), f"wait() stopped returning after {len(stamps)} requests"
+    for i in range(450, len(stamps)):
+        assert stamps[i] - stamps[i - 450] >= 300.0 - 1e-6
+    for i in range(2, len(stamps)):
+        assert stamps[i] - stamps[i - 2] >= 1.0 - 1e-6
+
+
 def test_the_window_is_shared_across_threads() -> None:
     """Workers do not each get their own 450: the count is per process, like the block."""
     clock = FakeClock()
