@@ -71,8 +71,11 @@ class RateLimiter:
             t = max(now, self._next)
             while True:
                 # Rolling window: the oldest reservation must have aged out before the
-                # count can drop below the cap.
-                while self._sent and self._sent[0] <= t - self._window:
+                # count can drop below the cap. Each bound is compared in the same form
+                # it is assigned in below (`reservation + span`): `(a + span) - span` can
+                # round to just under `a` when the clock crosses a power of two, and
+                # the loop then never sees the slot it has just waited for.
+                while self._sent and self._sent[0] + self._window <= t:
                     self._sent.popleft()
                 if len(self._sent) >= self._max_per_window:
                     t = self._sent[0] + self._window
@@ -81,7 +84,7 @@ class RateLimiter:
                 # this second is already full.
                 if len(self._sent) >= self._max_burst:
                     earliest_in_second = self._sent[-self._max_burst]
-                    if earliest_in_second > t - 1.0:
+                    if earliest_in_second + 1.0 > t:
                         t = earliest_in_second + 1.0
                         continue
                 break
